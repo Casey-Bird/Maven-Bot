@@ -1,0 +1,26 @@
+{
+    "bot_version": 0.0,
+    "max_items": 30,
+    "event": "normal",
+    "admins": [155751780674699264, 470650378271326208],
+
+    "buy_tax": 1.03,
+    "sell_tax": 1.05,
+    
+    "work_cooldown": 30,
+
+    "fish_cooldown": 30,
+    "dig_cooldown": 5,
+    "hunt_cooldown": 60,
+
+    "fish_amount": 1,
+    "dig_amount": 1,
+    "hunt_amount": 1,
+
+    "fish_skill_amount": 1,
+    "dig_skill_amount": 1,
+    "hunt_skill_amount": 1,
+
+    "chest_drop_chance": [1,1,1,1,2],
+    "chest_drop_amount": 1
+}
