@@ -57,11 +57,11 @@
     },
 
     "item4":{
-        "name": "Knife",
+        "name": "Sword",
         "key": "item4",
-        "description": "Use this knife to stab your enemies...or your friends.",
-        "store_value": 310,
-        "emoji": 986786881255641138,
+        "description": "Basic sword for defending yourself.",
+        "store_value": 2000,
+        "emoji": 994736580793221211,
         "rarity": 880040222480543774,
         "shop": "normal",
         "can_buy": "true",
@@ -70,7 +70,7 @@
         "recipe": {},
         "use_description": "null",
         "use_health": 0,
-        "use_damage": 2,
+        "use_damage": 50,
         "self_usable": "false",
         "target_usable": "true"
     },

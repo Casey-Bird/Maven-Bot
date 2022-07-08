@@ -21,6 +21,9 @@
     "dig_skill_amount": 1,
     "hunt_skill_amount": 1,
 
+    "use_cooldown": 30,
+    "use_attack_cooldown": 300,
+
     "chest_drop_chance": [1,1,1,1,2],
     "chest_drop_amount": 1
 }

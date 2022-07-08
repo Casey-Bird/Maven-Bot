@@ -9,6 +9,9 @@ hunt_cooldowns = [] # Cooldowns for hunting
 craft_cooldowns = [] # Cooldown container for users who crafted recently
 attack_cooldowns = [] # Cooldowns for users who just attacked
 
+use_cooldown = [] # Cooldown for the use command generally
+use_attack_cooldown = [] # Cooldown for any item that does damage to another user
+
 
 class Configuration():
     bot_version = "0.0"
@@ -377,8 +380,8 @@ class Database():
         if name in banana_name:
             return "item3"
         
-        knife_name = ["knife", "knif", "knives", "knifes"]
-        if name in knife_name:
+        sword_name = ["sword", "swords", "swor"]
+        if name in sword_name:
             return "item4"
 
         seabass_name = ["sea bass", "sea", "bass", "sea basses", "seabass"]
@@ -565,15 +568,15 @@ class Database():
 
         if type == "damage":
             
-            if key == "item4": # Knife
-                knife_embed = discord.Embed(title = f"{target.name} was stabbed by a Knife!", description = f"**- {use_damage}** ❤️")
+            if key == "item4": # Sword
+                knife_embed = discord.Embed(title = f"{target.name} was sliced by a Sword!", description = f"**- {use_damage}** ❤️")
                 crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
                 
                 if current_health - use_damage <= 0: # They just died
+                    await Tools.Apply_Death(ctx, bot, target.id, severity)
                     h = 100
                     update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
                     cursor.execute(update_query)
-                    await Tools.Apply_Death(ctx, bot, target.id, severity)
                 
                 else: # Normal damage calculation
                     h = current_health - use_damage
@@ -774,7 +777,6 @@ class Views():
                                     label = "Kami", description = "Protector and ruler of the forest.", emoji = bot.get_emoji(993848035253694484)
                                 )
                                 options.append(kami_option)
-
 
                             super().__init__(
                                 placeholder="Choose a title to equip.",
@@ -1332,11 +1334,11 @@ class Views():
                 pass
             
 
-            class Knife_Button(discord.ui.Button):
+            class Sword_Button(discord.ui.Button):
                 def __init__(self):
-                    emoji = bot.get_emoji(986786881255641138)
+                    emoji = bot.get_emoji(994736580793221211)
                     super().__init__(
-                        label = "Knife",
+                        label = "Sword",
                         style = discord.ButtonStyle.gray,
                         emoji = emoji
                     )
@@ -1375,8 +1377,8 @@ class Views():
             view = Target_Menu()
 
 
-            if "item4" in target_usable: # Knife
-                view.add_item(Knife_Button())   
+            if "item4" in target_usable: # Sword
+                view.add_item(Sword_Button())   
             if "item12" in target_usable: # Tome of The Forest
                 view.add_item(TomeOfTheForest_Button())
             #if "item13" in target_usable: # Tome of The Forest
@@ -1469,21 +1471,17 @@ class Tools():
 
     # Calculate damage and reduce currency
     async def Apply_Death(ctx, bot, user, severity):
-        severity_one_cost = random.randrange(1000, 3000)
-        stats_db = sql.connect("./data/stats_db.db")
-        cursor = stats_db.cursor()
-        death_embed = discord.Embed(title = f"{user.name} You died.")
+        message = " "
+        raw_user = bot.get_user(user)
 
         if severity == 1:
-            death_embed.add_field(name = "You were forced to pay god silver to bring you back to life.", value = f"**- {severity_one_cost}** {bot.get_emoji(985978616741511208)} Silver")
-            h = 100
-            update_query = f"UPDATE users SET health = '{h}' WHERE id = {user.id}"
-            cursor.execute(update_query)
+            severity_cost = random.randrange(1000, 3000)
+            message = f"{raw_user.mention} You were forced to pay god **{severity_cost}** {bot.get_emoji(985978616741511208)} Silver, to bring you back to life."
 
-            await Database.Update_Balance(user.id, "wallet", -severity_one_cost)
+            await Database.Update_Balance(user, "wallet", -severity_cost)
         
-        
-        await ctx.send(death_embed)
+        await ctx.send(message)
+
 
             
     # Function for giving loot chests
