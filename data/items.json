@@ -70,7 +70,7 @@
         "recipe": {},
         "use_description": "null",
         "use_health": 0,
-        "use_damage": 50,
+        "use_damage": 5,
         "self_usable": "false",
         "target_usable": "true"
     },
@@ -245,7 +245,7 @@
         "recipe": {},
         "use_description": "null",
         "use_health": 0,
-        "use_damage": 0,
+        "use_damage": 8,
         "self_usable": "false",
         "target_usable": "true"
     }

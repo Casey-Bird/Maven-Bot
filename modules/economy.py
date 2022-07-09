@@ -1,6 +1,4 @@
 
-from typing_extensions import Required
-from unicodedata import name
 import discord, asyncio
 
 from utils.core import Configuration, Database, Views, Cooldowns, Tools
@@ -330,6 +328,23 @@ class Economy_Module(commands.Cog):
 
         else:
             await ctx.respond(f"{ctx.author.mention}, you do not have permission to use that command.")
+
+
+    @slash_command(
+        name = "trade",
+        description = "Trade items to other members."
+    )
+    async def trade(
+        self, ctx,
+        target: discord.Option(discord.Member, description = "Choose which member you want to trade with.", Required = True),
+        your_item: discord.Option(str, description = "Type in the item you want to trade.", Required = True),
+        your_amount: discord.Option(str, description = "How many do you want to trade?", Required = True),
+        target_item: discord.Option(str, description = "Type in the item you are trading for.", Required = True),
+        target_amount: discord.Option(str, description = "Type in how many of their item you want.", Required = True)
+    ):
+        await Database.Create_User(ctx.author.id)
+        await Database.Create_User(target.id)
+        await Views.Setup_Trade(self.bot, ctx, ctx.author, target, your_item, your_amount, target_item, target_amount)
 
 
     ### Listeners & Events ###

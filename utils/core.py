@@ -1,5 +1,4 @@
 
-from operator import truediv
 import discord, json, asyncio, random
 import sqlite3 as sql
 
@@ -10,7 +9,7 @@ craft_cooldowns = [] # Cooldown container for users who crafted recently
 attack_cooldowns = [] # Cooldowns for users who just attacked
 
 use_cooldown = [] # Cooldown for the use command generally
-use_attack_cooldown = [] # Cooldown for any item that does damage to another user
+use_target_cooldown = [] # Cooldown for any item that does damage to another user
 
 
 class Configuration():
@@ -569,7 +568,7 @@ class Database():
         if type == "damage":
             
             if key == "item4": # Sword
-                knife_embed = discord.Embed(title = f"{target.name} was sliced by a Sword!", description = f"**- {use_damage}** ❤️")
+                embed = discord.Embed(title = f"{target.name} was sliced by a Sword!", description = f"**- {use_damage}** ❤️")
                 crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
                 
                 if current_health - use_damage <= 0: # They just died
@@ -584,8 +583,25 @@ class Database():
                     cursor.execute(update_query)
                 
 
-                await interaction.response.edit_message(embed = knife_embed, view = None)
+                await interaction.response.edit_message(embed = embed, view = None)
 
+            if key == "item13": # Forest Wisp
+                embed = discord.Embed(title = f"{target.name} was attacked by a Forest Wisp!", description = f"**- {use_damage}** ❤️")
+                crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
+                
+                if current_health - use_damage <= 0: # They just died
+                    await Tools.Apply_Death(ctx, bot, target.id, severity)
+                    h = 100
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+                else: # Normal damage calculation
+                    h = current_health - use_damage
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+
+                await interaction.response.edit_message(embed = embed, view = None)
 
 
         stats_db.commit()
@@ -670,6 +686,15 @@ class Database():
             stats_db.commit()
             stats_db.close()
 
+    # Update Status Effects
+    async def Update_Status(user_id, status, change):
+        stats_db = sql.connect("./data/stats_db.db")
+        cursor = stats_db.cursor()
+        
+        update_query = f"UPDATE users SET {status} = '{change}' WHERE id = {user_id}"
+        cursor.execute(update_query)
+        stats_db.commit()
+        stats_db.close()
 
 
 class Views():
@@ -1168,6 +1193,10 @@ class Views():
         
         return Sell_View()
 
+    # Trading items between users View
+    async def Setup_Trade(bot, ctx, user, target, user_item, user_amount, target_item, target_amount):
+        pass
+
     # Moderation Menu View
     async def Setup_ModMenu(bot,ctx, target, user):
         # TODO if the target is the same as the user, display commands like purge
@@ -1327,11 +1356,27 @@ class Views():
             message = await ctx.respond(embed = embed, view = view)
         
         if user_id != target_id: # Targeted Someone Else
+
             embed = discord.Embed(title = f"{ctx.author.name}'s usable items**:**", description = title, color = t_color)
+
 
             class ForestWisp_Button(discord.ui.Button):
                 
-                pass
+                def __init__(self):
+                    emoji = bot.get_emoji(993847218660446311)
+                    super().__init__(
+                        label = "Forest Wisp",
+                        style = discord.ButtonStyle.gray,
+                        emoji = emoji
+                    )
+                async def callback(self, interaction: discord.Interaction):
+                    user = interaction.user
+                    title, t_color = await Database.Fetch_Title(bot, user_id)
+
+                    if user.id == user_id:
+                        key = "item13"
+                        await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                        await Database.Update_Status(target_id, "toxin", "true")
             
 
             class Sword_Button(discord.ui.Button):
@@ -1369,23 +1414,29 @@ class Views():
                         pass
 
 
-
             class Target_Menu(discord.ui.View):
                 # TODO Show items that can target the user
                 pass
             
+
             view = Target_Menu()
 
+            if user_id in use_target_cooldown:
+                pass
+            
+            else:
+                if "item4" in target_usable: # Sword
+                    view.add_item(Sword_Button())   
+            
+                if "item12" in target_usable: # Tome of The Forest
+                    view.add_item(TomeOfTheForest_Button())
+            
+                if "item13" in target_usable: # Forest Wisp
+                    view.add_item(ForestWisp_Button())
+            
 
-            if "item4" in target_usable: # Sword
-                view.add_item(Sword_Button())   
-            if "item12" in target_usable: # Tome of The Forest
-                view.add_item(TomeOfTheForest_Button())
-            #if "item13" in target_usable: # Tome of The Forest
-            #    view.add_item(ForestWisp_Button())
-            
-            
             message = await ctx.respond(embed = embed, view = view)
+            await Cooldowns.add_cooldown("use_target", user_id)
 
 
 
@@ -1409,6 +1460,13 @@ class Cooldowns():
             hunt_cooldowns.append(user_id)
             await asyncio.sleep(config["hunt_cooldown"]) # Use configuration file to determine cooldown length
             hunt_cooldowns.remove(user_id)
+
+        if cooldown == "use_target":
+            use_target_cooldown.append(user_id)
+            await asyncio.sleep(config["use_target_cooldown"])
+            use_target_cooldown.remove(user_id)
+
+
 
     # Retrieve cooldowns
     async def get_cooldowns(cooldown):
