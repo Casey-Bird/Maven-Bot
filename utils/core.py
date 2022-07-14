@@ -1644,16 +1644,20 @@ class Tools():
 
     # Unique function for friend's server:
     async def Give_Voidstone(bot, ctx):
-        user_id = ctx.author.id
-        random_chance = random.choice([1,1,1,1,1,1,1,1,1,1,1,1,1,2])
-
-        if random_chance == 2:
-            await ctx.respond(f"{ctx.author.name} found a {bot.get_emoji(997267877818286171)} Void Stone!")
-
-            await Database.Update_User_Inventory(user_id, "item14", "add", 1)
-
-        else:
+        if ctx.author.id == 816471695975776276: # If the user is maven bot.
             pass
+        
+        else:
+            user_id = ctx.author.id
+            random_chance = random.choice([1,1,1,1,1,1,1,1,1,1,1,1,1,2])
+
+            if random_chance == 2:
+                await ctx.channel.send(f"{ctx.author.name} found a {bot.get_emoji(997267877818286171)} Void Stone!")
+
+                await Database.Update_User_Inventory(user_id, "item14", "add", 1)
+
+            else:
+                pass
 
 
     # Function for giving loot chests
