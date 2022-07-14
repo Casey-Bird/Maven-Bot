@@ -248,9 +248,26 @@
         "use_damage": 8,
         "self_usable": "false",
         "target_usable": "true"
+    },
+
+    "item14":{
+        "name": "Void Stone",
+        "key": "item14",
+        "description": "Ancient rock found only in the darkest parts of the void.",
+        "store_value": 0,
+        "emoji": 997267877818286171,
+        "rarity": 880040222367289385,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 8,
+        "self_usable": "false",
+        "target_usable": "false"
     }
-
-
 
 
 }

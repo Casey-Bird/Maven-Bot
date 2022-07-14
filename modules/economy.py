@@ -356,6 +356,9 @@ class Economy_Module(commands.Cog):
         await Database.Create_User(user_id)
         await Database.Update_Message_Count(user_id, message, self.bot)
 
+        if message.guild.id == 497128669412589574:
+            await Tools.Give_Voidstone(self.bot, message)
+
 
 
 

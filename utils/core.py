@@ -8,7 +8,7 @@ hunt_cooldowns = [] # Cooldowns for hunting
 craft_cooldowns = [] # Cooldown container for users who crafted recently
 attack_cooldowns = [] # Cooldowns for users who just attacked
 
-use_cooldown = [] # Cooldown for the use command generally
+use_cooldown = [] # Cooldown for items used on themselves
 use_target_cooldown = [] # Cooldown for any item that does damage to another user
 
 
@@ -201,6 +201,9 @@ class Database():
                 title = f"{bot.get_emoji(993848035253694484)} Kami of the Forest {bot.get_emoji(993848035253694484)}"
                 t_color = discord.Color.from_rgb(66,237,95)
 
+            if title_name == "void":
+                title = f"{bot.get_emoji(997271210285092974)} Avatar of the Void {bot.get_emoji(997271210285092974)}"
+                t_color = discord.Color.from_rgb(48,22,77)
 
             return title, t_color
 
@@ -272,12 +275,15 @@ class Database():
         # Super golden bar, Demon & Instigator based on user id
         titles = []
         user_items = await Database.Fetch_User_Items(user_id)
-        
-        if user_id == 155751780674699264: # Maven's ID
+        maven = 155751780674699264
+
+        if user_id == 155751780674699264 or user_id == maven: # Maven's ID
             titles.append("demon")
-        if user_id == 743597640012398643: # Nick's ID
+        if user_id == 743597640012398643 or user_id == maven: # Nick's ID
             titles.append("instigator")
-        
+        if user_id == 173008417013760000 or user_id == maven: # VoidPapi's ID
+            titles.append("void")
+
         if "item11" in user_items:
             titles.append("golden")
         
@@ -415,9 +421,15 @@ class Database():
         if name in tome_name:
             return "item12"
 
-        wisp_name = ["forest wisp"]
+        wisp_name = ["forest wisp", "forest", "wisp"]
         if name in wisp_name:
             return "item13"
+
+        voidstone_name = ["void stone", "void ston", "void stones", "voidstone", "voidstones"]
+        if name in voidstone_name:
+            return "item14"
+
+
 
         return "error"
 
@@ -797,9 +809,15 @@ class Views():
                                 )
                                 options.append(demon_option)
 
-                            if "kami" in raw_options: # If they are me.
+                            if "kami" in raw_options: # If they are kami.
                                 kami_option = discord.SelectOption(
                                     label = "Kami", description = "Protector and ruler of the forest.", emoji = bot.get_emoji(993848035253694484)
+                                )
+                                options.append(kami_option)
+
+                            if "void" in raw_options: # If they are voidpapi.
+                                kami_option = discord.SelectOption(
+                                    label = "Void Avatar", description = "Avatar of the Void.", emoji = bot.get_emoji(997271210285092974)
                                 )
                                 options.append(kami_option)
 
@@ -811,6 +829,10 @@ class Views():
 
                         async def callback(self, interaction: discord.Interaction):
                             selection = self.values[0]
+                            
+                            if selection.lower() == "void avatar":
+                                selection = "void"
+                            
                             complete_embed = discord.Embed(title = "Title change completed.")
 
                             await Database.Update_User_Title(member.id, selection.lower())
@@ -1195,7 +1217,79 @@ class Views():
 
     # Trading items between users View
     async def Setup_Trade(bot, ctx, user, target, user_item, user_amount, target_item, target_amount):
-        pass
+        title, t_color = await Database.Fetch_Title(bot, user.id)
+        items = await Database.Fetch_Itemlist() 
+
+        user_item_key = await Database.Fetch_Item_Key(user_item)
+        target_item_key = await Database.Fetch_Item_Key(target_item)
+
+
+        user_item_amount = await Database.Fetch_Item_Amount(user.id, user_item_key)
+        target_item_amount = await Database.Fetch_Item_Amount(target.id, target_item_key)
+
+
+        if int(user_item_amount) >= int(user_amount): # They have the item and enough of it
+            if int(target_item_amount) >= int(target_amount): # The target also has the asked items, continue to trade view.
+                trade_embed = discord.Embed(title = f"{user.name} is trading with {target.name}", description = title, color = t_color)
+                
+                user_item_name = items[user_item_key]["name"]
+                user_item_emoji = items[user_item_key]["emoji"]
+                user_item_rarity = items[user_item_key]["rarity"]
+                
+                target_item_name = items[target_item_key]["name"]
+                target_item_emoji = items[target_item_key]["emoji"]
+                target_item_rarity = items[target_item_key]["rarity"]
+                
+                trade_embed.add_field(name = f"{user.name}'s Offer:", value = f"{bot.get_emoji(user_item_emoji)} {user_item_name} {bot.get_emoji(user_item_rarity)} - **{user_amount}**\nfor {target.name}'s:\n{bot.get_emoji(target_item_emoji)} {target_item_name} {bot.get_emoji(target_item_rarity)} - **{target_amount}**")
+                
+
+                class Trade_View(discord.ui.View):
+                    # TODO Add trade details to an embed with buttons
+
+                    @discord.ui.button(label = "Accept", style = discord.ButtonStyle.green)
+                    async def accept_callback(self, button: discord.Button, interaction: discord.Interaction):
+                        accept_embed = discord.Embed
+
+                        if target.id == interaction.user.id:
+                            accept_embed = discord.Embed(title = "Trade Completed!")
+
+                            await Database.Update_User_Inventory(user.id, user_item_key, "subtract", int(user_amount))
+                            await Database.Update_User_Inventory(user.id, target_item_key, "add", int(target_amount))
+
+                            await Database.Update_User_Inventory(target.id, target_item_key, "subtract", int(target_amount))
+                            await Database.Update_User_Inventory(target.id, user_item_key, "add", int(user_amount))
+
+                            await interaction.response.edit_message(embed = accept_embed, view = None)
+                        
+                        else:
+                            pass
+
+                    @discord.ui.button(label = "Decline", style = discord.ButtonStyle.red)
+                    async def decline_callback(self, button: discord.Button, interaction: discord.Interaction):
+                        if interaction.user.id == user.id or interaction.user.id == target.id:
+                            decline_embed = discord.Embed(title = "Trade Declined!")
+                            await interaction.response.edit_message(embed = decline_embed, view = None)
+                        else:
+                            pass
+
+                    @discord.ui.button(label = "Cancel", style = discord.ButtonStyle.grey)
+                    async def cancel_callback(self, button: discord.Button, interaction: discord.Interaction):
+                        if interaction.user.id == user.id or interaction.user.id == target.id:
+                            cancel_embed = discord.Embed(title = "Trade Canceled!")
+                            await interaction.response.edit_message(embed = cancel_embed, view = None)
+                        else:
+                            pass
+
+
+                view = Trade_View()
+
+                await ctx.respond(embed = trade_embed, view = view)
+                await ctx.send(f"{target.mention}, you've received a trade offer!")
+
+            else: # They did not have the item requested, or enough of it.
+                await ctx.respond(f"{user.mention}, they do not have enough of that item to trade!")
+        else: # They don't have the item or don't have enough of the item
+            await ctx.respond(f"{user.mention}, you don't have enough of that item to trade!")
 
     # Moderation Menu View
     async def Setup_ModMenu(bot,ctx, target, user):
@@ -1346,14 +1440,16 @@ class Views():
 
             if 1 == 1: # Add buttons to view
                 if "item10" in self_usable:
+                    basic_amount = await Database.Fetch_Item_Amount(user_id, "item10")
                     view.add_item(BasicChest_Button())
-                    embed.add_field(name = f"{bot.get_emoji(887651039573082122)} Basic Chest {bot.get_emoji(880040222367289385)} - **(amount)**", value = "Open this chest for goodies!", inline = False)
-                if "item12" in self_usable:
+                    embed.add_field(name = f"{bot.get_emoji(887651039573082122)} Basic Chest {bot.get_emoji(880040222367289385)} - **{basic_amount}**", value = "Open this chest for goodies!", inline = False)
+                if "item12" in self_usable and user_id not in use_cooldown:
                     view.add_item(TomeOfTheForest_Button())
                     embed.add_field(name = f"{bot.get_emoji(993842394044837968)} Tome of The Forest {bot.get_emoji(880071881301053490)}", value = "Heal others or use it on yourself for a chance to create wisps!", inline = False)
           
 
             message = await ctx.respond(embed = embed, view = view)
+            await Cooldowns.add_cooldown("use_self", user_id)
         
         if user_id != target_id: # Targeted Someone Else
 
@@ -1377,8 +1473,8 @@ class Views():
                         key = "item13"
                         await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                         await Database.Update_Status(target_id, "toxin", "true")
+                        await ctx.send(f"{target.mention}, you've been attacked!")
             
-
             class Sword_Button(discord.ui.Button):
                 def __init__(self):
                     emoji = bot.get_emoji(994736580793221211)
@@ -1394,7 +1490,7 @@ class Views():
                     if user.id == user_id:
                         key = "item4"
                         await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
-
+                        await ctx.send(f"{target.mention}, you've been attacked!")
 
             class TomeOfTheForest_Button(discord.ui.Button):
                 def __init__(self):
@@ -1410,12 +1506,14 @@ class Views():
                     if user.id == user_id:
                         key = "item12"
                         await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
+                        await ctx.send(f"{target.mention}, you've been healed!")
                     else:
                         pass
 
 
             class Target_Menu(discord.ui.View):
                 # TODO Show items that can target the user
+                # Add an embed field for every usable item and the amount
                 pass
             
 
@@ -1466,7 +1564,10 @@ class Cooldowns():
             await asyncio.sleep(config["use_target_cooldown"])
             use_target_cooldown.remove(user_id)
 
-
+        if cooldown == "use_self":
+            use_cooldown.append(user_id)
+            await asyncio.sleep(config["use_cooldown"])
+            use_cooldown.remove(user_id)
 
     # Retrieve cooldowns
     async def get_cooldowns(cooldown):
@@ -1541,7 +1642,20 @@ class Tools():
         await ctx.send(message)
 
 
-            
+    # Unique function for friend's server:
+    async def Give_Voidstone(bot, ctx):
+        user_id = ctx.author.id
+        random_chance = random.choice([1,1,1,1,1,1,1,1,1,1,1,1,1,2])
+
+        if random_chance == 2:
+            await ctx.respond(f"{ctx.author.name} found a {bot.get_emoji(997267877818286171)} Void Stone!")
+
+            await Database.Update_User_Inventory(user_id, "item14", "add", 1)
+
+        else:
+            pass
+
+
     # Function for giving loot chests
     async def Give_LootChest(bot, ctx):
         user_id = ctx.author.id
