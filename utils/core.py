@@ -1526,6 +1526,7 @@ class Views():
                         key = "item13"
                         await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                         await Database.Update_Status(target_id, "toxin", "true")
+                        await Database.Update_User_Inventory(user_id, "item13", "subtract", 1)
                         await ctx.send(f"{target.mention}, you've been attacked!")
             
             class Sword_Button(discord.ui.Button):
