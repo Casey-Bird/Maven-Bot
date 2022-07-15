@@ -1000,86 +1000,113 @@ class Views():
 
     # Get and Set Shop View
     async def Setup_Shop(bot, member, shop_selection, guild_id):
-        title, t_color = await Database.Fetch_Title(bot, member.id)
-        shopables = await Database.Fetch_Shopables(guild_id) # List of keys that can be bought currently
-        items = await Database.Fetch_Itemlist()
 
-        embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
+        if shop_selection == "normal":
+            title, t_color = await Database.Fetch_Title(bot, member.id)
+            shopables = await Database.Fetch_Shopables(guild_id) # List of keys that can be bought currently
+            items = await Database.Fetch_Itemlist()
 
-        i = 0
-        while i < 10:
-            try:
-                key = shopables[i]
-                
-                item_name = items[key]["name"]
-                item_description = items[key]["description"]
-                item_emoji = items[key]["emoji"]
-                item_rarity = items[key]["rarity"]
-                item_value = items[key]["store_value"]
+            embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
 
-                embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
-
-            except:
-                pass
-            i += 1
-
-        class Shop_View(discord.ui.View):
-
-            @discord.ui.button(label = "1", style = discord.ButtonStyle.blurple)
-            async def first_option_callback(self, button: discord.Button, interaction: discord.Interaction):
-                page1_embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
-                if member.id == interaction.user.id: # If the person who clicked is the author
-
-                    i = 0
-                    while i < 10:
-                        try:
-                            key = shopables[i]
-                            
-                            item_name = items[key]["name"]
-                            item_description = items[key]["description"]
-                            item_emoji = items[key]["emoji"]
-                            item_rarity = items[key]["rarity"]
-                            item_value = items[key]["store_value"]
-
-                            page1_embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
-
-                        except:
-                            pass
-                        i += 1
-                    await interaction.response.edit_message(embed = page1_embed, view = Shop_View())
-                else:
-                    pass
-
-            @discord.ui.button(label = "2", style = discord.ButtonStyle.blurple)
-            async def second_option_callback(self, button: discord.Button, interaction: discord.Interaction):
-                page2_embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
-                if member.id == interaction.user.id: # If the person who clicked is the author
-
-                    i = 10
-                    while i < 20:
-                        try:
-                            key = shopables[i]
-                            
-                            item_name = items[key]["name"]
-                            item_description = items[key]["description"]
-                            item_emoji = items[key]["emoji"]
-                            item_rarity = items[key]["rarity"]
-                            item_value = items[key]["store_value"]
-
-                            page2_embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
-
-                        except:
-                            pass
-                        i += 1
+            i = 0
+            while i < 10:
+                try:
+                    key = shopables[i]
                     
-                    await interaction.response.edit_message(embed = page2_embed, view = Shop_View())
-                else:
+                    item_name = items[key]["name"]
+                    item_description = items[key]["description"]
+                    item_emoji = items[key]["emoji"]
+                    item_rarity = items[key]["rarity"]
+                    item_value = items[key]["store_value"]
+
+                    embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
+
+                except:
                     pass
+                i += 1
+
+            class Shop_View(discord.ui.View):
+
+                @discord.ui.button(label = "1", style = discord.ButtonStyle.blurple)
+                async def first_option_callback(self, button: discord.Button, interaction: discord.Interaction):
+                    page1_embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
+                    if member.id == interaction.user.id: # If the person who clicked is the author
+
+                        i = 0
+                        while i < 10:
+                            try:
+                                key = shopables[i]
+                                
+                                item_name = items[key]["name"]
+                                item_description = items[key]["description"]
+                                item_emoji = items[key]["emoji"]
+                                item_rarity = items[key]["rarity"]
+                                item_value = items[key]["store_value"]
+
+                                page1_embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
+
+                            except:
+                                pass
+                            i += 1
+                        await interaction.response.edit_message(embed = page1_embed, view = Shop_View())
+                    else:
+                        pass
+
+                @discord.ui.button(label = "2", style = discord.ButtonStyle.blurple)
+                async def second_option_callback(self, button: discord.Button, interaction: discord.Interaction):
+                    page2_embed = discord.Embed(title = "Item Shop", description=f"{title}", color = t_color)
+                    if member.id == interaction.user.id: # If the person who clicked is the author
+
+                        i = 10
+                        while i < 20:
+                            try:
+                                key = shopables[i]
+                                
+                                item_name = items[key]["name"]
+                                item_description = items[key]["description"]
+                                item_emoji = items[key]["emoji"]
+                                item_rarity = items[key]["rarity"]
+                                item_value = items[key]["store_value"]
+
+                                page2_embed.add_field(name = f"{bot.get_emoji(985978616741511208)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline=False)
+
+                            except:
+                                pass
+                            i += 1
+                        
+                        await interaction.response.edit_message(embed = page2_embed, view = Shop_View())
+                    else:
+                        pass
 
 
 
-        view = Shop_View()
-        return embed, view
+            view = Shop_View()
+            return embed, view
+
+        if shop_selection == "void":
+            title, t_color = await Database.Fetch_Title(bot, member.id)
+            items = await Database.Fetch_Itemlist()
+
+            embed = discord.Embed(title = "Void Shop", description=f"{title}", color = t_color)
+            void_stone_emoji = items["item14"]["emoji"]
+            
+
+            class Shop_View(discord.ui.View):
+                pass
+
+            if 1 == 1: # Void Knife
+
+                item_name = items["item15"]["name"]
+                item_description = items["item15"]["description"]
+                item_emoji = items["item15"]["emoji"]
+                item_rarity = items["item15"]["rarity"]
+                item_value = items["item15"]["store_value"]
+
+                embed.add_field(name = f"{bot.get_emoji(void_stone_emoji)} **{item_value:,}** - {bot.get_emoji(item_emoji)} {item_name} {bot.get_emoji(item_rarity)}", value = f"{item_description}", inline = False)
+
+
+            view = Shop_View()
+            return embed, view
 
     # Get and Set Inventory View
     async def Setup_Inventory(bot, member):
@@ -1652,7 +1679,9 @@ class Tools():
             random_chance = random.choice([1,1,1,1,1,1,1,1,1,1,1,1,1,2])
 
             if random_chance == 2:
-                await ctx.channel.send(f"{ctx.author.name} found a {bot.get_emoji(997267877818286171)} Void Stone!")
+                void_channel = bot.get_channel(997278795860029470)
+
+                await void_channel.send(f"{ctx.author.name} found a {bot.get_emoji(997267877818286171)} Void Stone!")
 
                 await Database.Update_User_Inventory(user_id, "item14", "add", 1)
 

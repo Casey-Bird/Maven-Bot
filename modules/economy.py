@@ -131,7 +131,7 @@ class Economy_Module(commands.Cog):
             await ctx.respond(f"{ctx.author.mention}, you do not have enough gold to withdraw!")
 
 
-    shop_choices = ["normal"]
+    shop_choices = ["normal", "void"]
     @slash_command(
         name = "shop",
         description = "View the shop to purchase and sell items."
