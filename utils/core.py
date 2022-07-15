@@ -429,7 +429,9 @@ class Database():
         if name in voidstone_name:
             return "item14"
 
-
+        voidstone_name = ["void knife", "void knive", "void knifes", "voidknife", "voidknifes", "voidknives"]
+        if name in voidstone_name:
+            return "item15"
 
         return "error"
 
@@ -542,6 +544,9 @@ class Database():
         # Severity: 1, 2, 3
         # Key: Which item was used
         use_health, use_description, use_damage = await Tools.Generate_Use_Info(key)
+        crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
+        if crit_chance == 2:
+            use_damage = int(use_damage * 1.5)
 
         stats_db = sql.connect("./data/stats_db.db")
         cursor = stats_db.cursor()
@@ -601,6 +606,27 @@ class Database():
                 embed = discord.Embed(title = f"{target.name} was attacked by a Forest Wisp!", description = f"**- {use_damage}** ❤️")
                 crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
                 
+                if current_health - use_damage <= 0: # They just died
+                    await Tools.Apply_Death(ctx, bot, target.id, severity)
+                    h = 100
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+                else: # Normal damage calculation
+                    h = current_health - use_damage
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+
+                await interaction.response.edit_message(embed = embed, view = None)
+
+            if key == "item15": # Void Knife
+                embed = discord.Embed(title = f"{target.name} was stabbed by a Void Knife!", description = f"**- {use_damage}** ❤️")
+                
+                if crit_chance == 2:
+                    embed.add_field(name = "Critical Hit!", value = "1.5x extra damage.")
+
+
                 if current_health - use_damage <= 0: # They just died
                     await Tools.Apply_Death(ctx, bot, target.id, severity)
                     h = 100
@@ -1537,6 +1563,25 @@ class Views():
                     else:
                         pass
 
+            class VoidKnife_Button(discord.ui.Button):
+                def __init__(self):
+                    emoji = bot.get_emoji(997288273993023529)
+                    super().__init__(
+                        label = "Void Knife",
+                        style = discord.ButtonStyle.gray,
+                        emoji = emoji
+                    )
+                async def callback(self, interaction: discord.Interaction):
+                    user = interaction.user
+                    title, t_color = await Database.Fetch_Title(bot, user_id)
+
+                    if user.id == user_id:
+                        key = "item15"
+                        await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                        await ctx.send(f"{target.mention}, you've been attacked!")
+
+
+
 
             class Target_Menu(discord.ui.View):
                 # TODO Show items that can target the user
@@ -1559,6 +1604,10 @@ class Views():
                 if "item13" in target_usable: # Forest Wisp
                     view.add_item(ForestWisp_Button())
             
+                if "item15" in target_usable: # Forest Wisp
+                    view.add_item(VoidKnife_Button())
+
+
 
             message = await ctx.respond(embed = embed, view = view)
             await Cooldowns.add_cooldown("use_target", user_id)

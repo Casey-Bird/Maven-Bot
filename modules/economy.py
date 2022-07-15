@@ -139,7 +139,7 @@ class Economy_Module(commands.Cog):
     async def shop(
         self,
         ctx,
-        shop_selection: discord.Option(str, description = "Which shop would you like to view?", choices = shop_choices, required = False)
+        shop_selection: discord.Option(str, description = "Which shop would you like to view?", choices = shop_choices, default = "normal", required = False)
     ):
         user_id = ctx.author.id
         await Database.Create_User(user_id)
@@ -201,20 +201,37 @@ class Economy_Module(commands.Cog):
             await ctx.respond(f"{ctx.author.mention}, that item is currently not buyable.")
         
         else: # Continue code
-            store_value = items[key]["store_value"]
-            wallet, bank = await Database.Fetch_Balance(self.bot, ctx.author.id)
+            if items[key]["shop"] == "normal":
+                store_value = items[key]["store_value"]
+                wallet, bank = await Database.Fetch_Balance(self.bot, ctx.author.id)
 
-            if wallet >= int(amount) * int(store_value): # They can afford to purchase the item
+                if wallet >= int(amount) * int(store_value): # They can afford to purchase the item
+                    
+                    view = await Views.Setup_Purchase(self.bot, ctx.author, key, amount, cost, title, t_color)
+                    message = await ctx.respond(
+                        embed = embed,
+                        view = view
+                    )
                 
-                view = await Views.Setup_Purchase(self.bot, ctx.author, key, amount, cost, title, t_color)
-                message = await ctx.respond(
-                    embed = embed,
-                    view = view
-                )
-            
-            else: # They can't afford to purchase the item
-                await ctx.respond(f"{ctx.author.mention}, you can't afford that many!")
+                else: # They can't afford to purchase the item
+                    await ctx.respond(f"{ctx.author.mention}, you can't afford that many!")
         
+            if items[key]["shop"] == "void":
+                void_embed = discord.Embed(title = F"{ctx.author.name} claimed a Void Item!")
+
+                store_value = items[key]["store_value"] # Void stone value
+                user_void_stones = await Database.Fetch_Item_Amount(ctx.author.id, "item14")
+
+                if user_void_stones >= int(amount) * int(store_value): # They can afford to purchase the item
+                    message = await ctx.respond(embed = void_embed)
+
+                    if key == "item15": # Void Knife
+                        await Database.Update_User_Inventory(ctx.author.id, "item14", "subtract", 50)
+                        await Database.Update_User_Inventory(ctx.author.id, "item15", "add", 1)
+                
+                else: # They can't afford to purchase the item
+                    await ctx.respond(f"{ctx.author.mention}, you can't afford that many!")
+
 
     @slash_command(
         name = "sell",
