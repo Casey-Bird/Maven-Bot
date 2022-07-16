@@ -225,7 +225,7 @@
         "can_trade": "false",
         "recipe": {},
         "use_description": "null",
-        "use_health": 25,
+        "use_health": 100,
         "use_damage": 0,
         "self_usable": "true",
         "target_usable": "true"
@@ -286,7 +286,46 @@
         "use_damage": 15,
         "self_usable": "false",
         "target_usable": "true"
+    },
+
+    "item16":{
+        "name": "Frost Crown",
+        "key": "item16",
+        "description": "A crown worn by the Frost King.",
+        "store_value": 0,
+        "emoji": 997989353060040875,
+        "rarity": 880071881301053490,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "false",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "true",
+        "target_usable": "true"
+    },
+
+    "item17":{
+        "name": "Frost Staff",
+        "key": "item17",
+        "description": "Wielded by the Frost King, this staff has mystical ice magic tied to it.",
+        "store_value": 0,
+        "emoji": 631047805133127680,
+        "rarity": 880040222526672907,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "false",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 25,
+        "self_usable": "true",
+        "target_usable": "true"
     }
+
 
 
 

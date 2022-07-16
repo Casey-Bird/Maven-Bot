@@ -1408,11 +1408,13 @@ class Views():
         target_id = target.id
         items = await Database.Fetch_Itemlist()
         title, t_color = await Database.Fetch_Title(bot, user_id)
+        stats = await Database.Fetch_Stats(user_id)
 
         self_usable, target_usable = await Database.Fetch_Usables(user_id) # Returns keys of items the user owns
 
 
         if user_id == target_id: # If they targeted themselves
+        
             embed = discord.Embed(title = f"{ctx.author.name}'s usable items**:**", description = title, color = t_color)
 
             class BasicChest_Button(discord.ui.Button):
@@ -1474,6 +1476,7 @@ class Views():
                     if user.id == user_id:
                         key = "item12"
                         await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
+                        await Cooldowns.add_cooldown("use_self", user_id)
                     else:
                         pass
 
@@ -1481,6 +1484,41 @@ class Views():
             class ForestWisp_Button(discord.ui.Button):
                 pass
 
+
+            class Unfreeze_Button(discord.ui.Button):
+                def __init__(self):
+                    emoji = bot.get_emoji(636124362579116032)
+                    super().__init__(
+                        label = "Unfreeze",
+                        style = discord.ButtonStyle.gray,
+                        emoji = emoji
+                    )
+                async def callback(self, interaction: discord.Interaction):
+                    user = interaction.user
+                    title, t_color = await Database.Fetch_Title(bot, user_id)
+                    
+                    chance = random.choice([1,1,1,1,1,1,2])
+
+                    if user.id == user_id:
+
+                        if chance == 2: # Success
+                            success_embed = discord.Embed(title = f"{user.name}, you are unfrozen!")
+
+                            await Database.Update_Status(user_id, "frozen", "false")
+
+                            await interaction.response.edit_message(embed = success_embed, view = None)
+                            await Cooldowns.add_cooldown("use_self", user_id)
+                        
+                        else: # Failure
+                            fail_embed = discord.Embed(title = f"{user.name}, you failed to unfreeze yourself. Try again!")
+
+                            await interaction.response.edit_message(embed = fail_embed, view = None)
+                            await Cooldowns.add_cooldown("use_self", user_id)
+
+                    else:
+                        pass
+
+            
 
             class Self_Menu(discord.ui.View):
                 # TODO Show all usable items, with multiple pages of buttons
@@ -1492,126 +1530,136 @@ class Views():
 
 
             if 1 == 1: # Add buttons to view
-                if "item10" in self_usable:
-                    basic_amount = await Database.Fetch_Item_Amount(user_id, "item10")
-                    view.add_item(BasicChest_Button())
-                    embed.add_field(name = f"{bot.get_emoji(887651039573082122)} Basic Chest {bot.get_emoji(880040222367289385)} - **{basic_amount}**", value = "Open this chest for goodies!", inline = False)
-                if "item12" in self_usable and user_id not in use_cooldown:
-                    view.add_item(TomeOfTheForest_Button())
-                    embed.add_field(name = f"{bot.get_emoji(993842394044837968)} Tome of The Forest {bot.get_emoji(880071881301053490)}", value = "Heal others or use it on yourself for a chance to create wisps!", inline = False)
-          
+                if user_id in use_cooldown:
+                    
+                    embed.add_field(name = "You are on cooldown.", value = "Reminaing time:")
+
+                else:
+                    if "item10" in self_usable:
+                        basic_amount = await Database.Fetch_Item_Amount(user_id, "item10")
+                        view.add_item(BasicChest_Button())
+                        embed.add_field(name = f"{bot.get_emoji(887651039573082122)} Basic Chest {bot.get_emoji(880040222367289385)} - **{basic_amount}**", value = "Open this chest for goodies!", inline = False)
+                    if "item12" in self_usable and user_id not in use_cooldown:
+                        view.add_item(TomeOfTheForest_Button())
+                        embed.add_field(name = f"{bot.get_emoji(993842394044837968)} Tome of The Forest {bot.get_emoji(880071881301053490)}", value = "Heal others or use it on yourself for a chance to create wisps!", inline = False)
+                    if stats["frozen"] == "true":
+                        view.add_item(Unfreeze_Button())
+
 
             message = await ctx.respond(embed = embed, view = view)
-            await Cooldowns.add_cooldown("use_self", user_id)
         
         if user_id != target_id: # Targeted Someone Else
 
-            embed = discord.Embed(title = f"{ctx.author.name}'s usable items**:**", description = title, color = t_color)
-
-
-            class ForestWisp_Button(discord.ui.Button):
+            if stats["frozen"] == "true": # User is frozen
+                frozen_embed = discord.Embed(title = f"{ctx.author.name}, you are frozen.", description = "Type /use on yourself to unfreeze!", color = discord.Color.from_rgb(38, 177, 201))
+                frozen_embed.set_thumbnail(url = "https://i.imgur.com/XOP5sDN.png")
+                await ctx.respond(embed = frozen_embed)
+            
+            else: # User is not frozen, continue use command.
                 
-                def __init__(self):
-                    emoji = bot.get_emoji(993847218660446311)
-                    super().__init__(
-                        label = "Forest Wisp",
-                        style = discord.ButtonStyle.gray,
-                        emoji = emoji
-                    )
-                async def callback(self, interaction: discord.Interaction):
-                    user = interaction.user
-                    title, t_color = await Database.Fetch_Title(bot, user_id)
+                embed = discord.Embed(title = f"{ctx.author.name}'s usable items**:**", description = title, color = t_color)
 
-                    if user.id == user_id:
-                        key = "item13"
-                        await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
-                        await Database.Update_Status(target_id, "toxin", "true")
-                        await Database.Update_User_Inventory(user_id, "item13", "subtract", 1)
-                        await ctx.send(f"{target.mention}, you've been attacked!")
-            
-            class Sword_Button(discord.ui.Button):
-                def __init__(self):
-                    emoji = bot.get_emoji(994736580793221211)
-                    super().__init__(
-                        label = "Sword",
-                        style = discord.ButtonStyle.gray,
-                        emoji = emoji
-                    )
-                async def callback(self, interaction: discord.Interaction):
-                    user = interaction.user
-                    title, t_color = await Database.Fetch_Title(bot, user_id)
+                class ForestWisp_Button(discord.ui.Button):
+                    
+                    def __init__(self):
+                        emoji = bot.get_emoji(993847218660446311)
+                        super().__init__(
+                            label = "Forest Wisp",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
 
-                    if user.id == user_id:
-                        key = "item4"
-                        await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
-                        await ctx.send(f"{target.mention}, you've been attacked!")
+                        if user.id == user_id:
+                            key = "item13"
+                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await Database.Update_Status(target_id, "toxin", "true")
+                            await Database.Update_User_Inventory(user_id, "item13", "subtract", 1)
+                            await ctx.send(f"{target.mention}, you've been attacked!")
+                
+                class Sword_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(994736580793221211)
+                        super().__init__(
+                            label = "Sword",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
 
-            class TomeOfTheForest_Button(discord.ui.Button):
-                def __init__(self):
-                    emoji = bot.get_emoji(993842394044837968)
-                    super().__init__(
-                        label = "Forest Tome",
-                        style = discord.ButtonStyle.gray,
-                        emoji = emoji
-                    )
-                async def callback(self, interaction: discord.Interaction):
-                    user = interaction.user
-                    title, t_color = await Database.Fetch_Title(bot, user_id)
-                    if user.id == user_id:
-                        key = "item12"
-                        await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
-                        await ctx.send(f"{target.mention}, you've been healed!")
-                    else:
-                        pass
+                        if user.id == user_id:
+                            key = "item4"
+                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await ctx.send(f"{target.mention}, you've been attacked!")
 
-            class VoidKnife_Button(discord.ui.Button):
-                def __init__(self):
-                    emoji = bot.get_emoji(997288273993023529)
-                    super().__init__(
-                        label = "Void Knife",
-                        style = discord.ButtonStyle.gray,
-                        emoji = emoji
-                    )
-                async def callback(self, interaction: discord.Interaction):
-                    user = interaction.user
-                    title, t_color = await Database.Fetch_Title(bot, user_id)
+                class TomeOfTheForest_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(993842394044837968)
+                        super().__init__(
+                            label = "Forest Tome",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
+                        if user.id == user_id:
+                            key = "item12"
+                            await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
+                            await ctx.send(f"{target.mention}, you've been healed!")
+                        else:
+                            pass
 
-                    if user.id == user_id:
-                        key = "item15"
-                        await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
-                        await ctx.send(f"{target.mention}, you've been attacked!")
+                class VoidKnife_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(997288273993023529)
+                        super().__init__(
+                            label = "Void Knife",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
 
-
-
-
-            class Target_Menu(discord.ui.View):
-                # TODO Show items that can target the user
-                # Add an embed field for every usable item and the amount
-                pass
-            
-
-            view = Target_Menu()
-
-            if user_id in use_target_cooldown:
-                pass
-            
-            else:
-                if "item4" in target_usable: # Sword
-                    view.add_item(Sword_Button())   
-            
-                if "item12" in target_usable: # Tome of The Forest
-                    view.add_item(TomeOfTheForest_Button())
-            
-                if "item13" in target_usable: # Forest Wisp
-                    view.add_item(ForestWisp_Button())
-            
-                if "item15" in target_usable: # Forest Wisp
-                    view.add_item(VoidKnife_Button())
+                        if user.id == user_id:
+                            key = "item15"
+                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await ctx.send(f"{target.mention}, you've been attacked!")
 
 
+                class Target_Menu(discord.ui.View):
+                    # TODO Show items that can target the user
+                    # Add an embed field for every usable item and the amount
+                    pass
+                
 
-            message = await ctx.respond(embed = embed, view = view)
-            await Cooldowns.add_cooldown("use_target", user_id)
+                view = Target_Menu()
+
+                if user_id in use_target_cooldown:
+                    pass
+                
+                else:
+                    if "item4" in target_usable: # Sword
+                        view.add_item(Sword_Button())   
+                
+                    if "item12" in target_usable: # Tome of The Forest
+                        view.add_item(TomeOfTheForest_Button())
+                
+                    if "item13" in target_usable: # Forest Wisp
+                        view.add_item(ForestWisp_Button())
+                
+                    if "item15" in target_usable: # Forest Wisp
+                        view.add_item(VoidKnife_Button())
+
+
+
+                message = await ctx.respond(embed = embed, view = view)
+                await Cooldowns.add_cooldown("use_target", user_id)
 
 
 
