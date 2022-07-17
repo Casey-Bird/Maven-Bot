@@ -617,7 +617,8 @@ class Database():
                     h = current_health - use_damage
                     update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
                     cursor.execute(update_query)
-                
+                stats_db.commit()
+                stats_db.close()
 
                 await interaction.response.edit_message(embed = embed, view = None)
 
@@ -635,7 +636,8 @@ class Database():
                     h = current_health - use_damage
                     update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
                     cursor.execute(update_query)
-                
+                stats_db.commit()
+                stats_db.close()
 
                 await interaction.response.edit_message(embed = embed, view = None)
 
@@ -664,7 +666,10 @@ class Database():
 
                 await interaction.response.edit_message(embed = embed, view = None)
 
-            if key == "item16": # Frost Staff
+                stats_db.commit()
+                stats_db.close()
+
+            if key == "item17": # Frost Staff
                 if crit_chance == 2: # Setting use_damage to correct value
                     use_damage = int(use_damage * 1.5)
 
@@ -685,6 +690,9 @@ class Database():
                     update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
                     cursor.execute(update_query)
                 
+                stats_db.commit()
+                stats_db.close()
+                
                 if frozen_immunity == "immune":
                     pass
                 else:
@@ -692,12 +700,6 @@ class Database():
                     await ctx.send(f"{target.mention}, you've been frozen! {bot.get_emoji(636124362579116032)}")
 
                 await interaction.response.edit_message(embed = embed, view = None)
-
-
-
-
-        stats_db.commit()
-        stats_db.close()
 
     # Update User's Inventory
     async def Update_User_Inventory(user_id, key, change, amount):
@@ -1706,11 +1708,9 @@ class Views():
                         title, t_color = await Database.Fetch_Title(bot, user_id)
 
                         if user.id == user_id:
-                            key = "item16"
+                            key = "item17"
                             await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                             await ctx.send(f"{target.mention}, you've been attacked!")
-
-
 
 
                 class Target_Menu(discord.ui.View):
@@ -1737,7 +1737,8 @@ class Views():
                     if "item15" in target_usable: # Forest Wisp
                         view.add_item(VoidKnife_Button())
 
-
+                    if "item17" in target_usable: # Frost Staff
+                        view.add_item(FrostStaff_Button())
 
                 message = await ctx.respond(embed = embed, view = view)
                 await Cooldowns.add_cooldown("use_target", user_id)
@@ -1798,7 +1799,8 @@ class Tools():
         if stats["toxin"] == "true":
             needed_emojis.append("🤢")
 
-        
+        if stats["frozen"] == "true":
+            needed_emojis.append("❄️")
 
         if len(needed_emojis) > 0:
             status_emojis = [" | "] + needed_emojis
@@ -1870,13 +1872,13 @@ class Tools():
 
     # Getting all the user's items and checking for status immunity
     async def Check_Stats_Immunity(user_id, status):
+
+        frost_crown = await Database.Fetch_Item_Amount(user_id, "item16")
         
-        if status == "frozen":
-            frost_crown = await Database.Fetch_Item_Amount(user_id, "item16")
-            if frost_crown > 0:
-                return "immune"
-            else:
-                return "freeze"
+        if frost_crown > 0:
+            return "immune"
+        else:
+            return "freeze"
 
 
     # Function for giving loot chests

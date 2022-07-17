@@ -318,10 +318,10 @@ class Economy_Module(commands.Cog):
         
         if ctx.author.id in admin_check:
             if command == "addmoney":
-                await Database.Update_Balance(ctx.author.id, "wallet", int(value))
+                await Database.Update_Balance(member.id, "wallet", int(value))
                 await ctx.respond(f"{member.mention} received {self.bot.get_emoji(985978616741511208)} **({value})** Silver.")
             if command == "removemoney":
-                await Database.Update_Balance(ctx.author.id, "wallet", -int(value))
+                await Database.Update_Balance(member.id, "wallet", -int(value))
                 await ctx.respond(f"{member.mention} lost {self.bot.get_emoji(985978616741511208)} **({value})** Silver.")
             if command == "additem":
                 key = await Database.Fetch_Item_Key(item)
