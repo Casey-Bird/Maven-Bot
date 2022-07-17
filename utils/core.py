@@ -205,6 +205,11 @@ class Database():
                 title = f"{bot.get_emoji(997271210285092974)} Avatar of the Void {bot.get_emoji(997271210285092974)}"
                 t_color = discord.Color.from_rgb(48,22,77)
 
+            if title_name == "frostking":
+                title = f"{bot.get_emoji(997989353060040875)} Frost King {bot.get_emoji(997989353060040875)}"
+                t_color = discord.Color.from_rgb(10,209,240)
+
+
             return title, t_color
 
     # Get wallet and bank info
@@ -289,6 +294,9 @@ class Database():
         
         if "item12" in user_items:
             titles.append("kami")
+
+        if "item16" in user_items:
+            titles.append("frostking")
 
         return titles
         
@@ -433,6 +441,15 @@ class Database():
         if name in voidstone_name:
             return "item15"
 
+        frostcrown_name = ["frost crown", "frost crowns", "frostcrown", "frostcrowns"]
+        if name in frostcrown_name:
+            return "item16"
+
+        frostcrown_name = ["frost staff", "frost staffs", "froststaff", "froststaffs"]
+        if name in frostcrown_name:
+            return "item17"
+
+
         return "error"
 
     # Update Balance
@@ -544,6 +561,8 @@ class Database():
         # Severity: 1, 2, 3
         # Key: Which item was used
         use_health, use_description, use_damage = await Tools.Generate_Use_Info(key)
+        frozen_immunity = await Tools.Check_Stats_Immunity(target.id, "frozen")
+        
         crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
         if crit_chance == 2:
             use_damage = int(use_damage * 1.5)
@@ -621,6 +640,10 @@ class Database():
                 await interaction.response.edit_message(embed = embed, view = None)
 
             if key == "item15": # Void Knife
+                if crit_chance == 2:
+                    use_damage = int(use_damage * 1.5)
+
+
                 embed = discord.Embed(title = f"{target.name} was stabbed by a Void Knife!", description = f"**- {use_damage}** ❤️")
                 
                 if crit_chance == 2:
@@ -640,6 +663,37 @@ class Database():
                 
 
                 await interaction.response.edit_message(embed = embed, view = None)
+
+            if key == "item16": # Frost Staff
+                if crit_chance == 2: # Setting use_damage to correct value
+                    use_damage = int(use_damage * 1.5)
+
+                embed = discord.Embed(title = f"{target.name} was blasted by a Frost Staff!", description = f"**- {use_damage}** ❤️")
+                
+                if crit_chance == 2:
+                    embed.add_field(name = "Critical Hit!", value = "1.5x extra damage.")
+
+
+                if current_health - use_damage <= 0: # They just died
+                    await Tools.Apply_Death(ctx, bot, target.id, severity)
+                    h = 100
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+                else: # Normal damage calculation
+                    h = current_health - use_damage
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+                if frozen_immunity == "immune":
+                    pass
+                else:
+                    await Database.Update_Status(target.id, "frozen", "true")
+                    await ctx.send(f"{target.mention}, you've been frozen! {bot.get_emoji(636124362579116032)}")
+
+                await interaction.response.edit_message(embed = embed, view = None)
+
+
 
 
         stats_db.commit()
@@ -824,28 +878,34 @@ class Views():
                                 options.append(option)
 
                             if "instigator" in raw_options: # If they are me.
-                                demon_option = discord.SelectOption(
+                                option = discord.SelectOption(
                                     label = "Instigator", description = "Do some instigating.", emoji = bot.get_emoji(986078219730059325)
                                 )
-                                options.append(demon_option)
+                                options.append(option)
 
                             if "golden" in raw_options: # If they are me.
-                                demon_option = discord.SelectOption(
+                                option = discord.SelectOption(
                                     label = "Golden", description = "Time to show off how wealthy you are.", emoji = bot.get_emoji(985978615911051314)
                                 )
-                                options.append(demon_option)
+                                options.append(option)
 
                             if "kami" in raw_options: # If they are kami.
-                                kami_option = discord.SelectOption(
+                                option = discord.SelectOption(
                                     label = "Kami", description = "Protector and ruler of the forest.", emoji = bot.get_emoji(993848035253694484)
                                 )
-                                options.append(kami_option)
+                                options.append(option)
 
                             if "void" in raw_options: # If they are voidpapi.
-                                kami_option = discord.SelectOption(
+                                option = discord.SelectOption(
                                     label = "Void Avatar", description = "Avatar of the Void.", emoji = bot.get_emoji(997271210285092974)
                                 )
-                                options.append(kami_option)
+                                options.append(option)
+
+                            if "frostking" in raw_options: # If they are voidpapi.
+                                option = discord.SelectOption(
+                                    label = "Frost King", description = "Crown made of pure ice.", emoji = bot.get_emoji(997989353060040875)
+                                )
+                                options.append(option)
 
                             super().__init__(
                                 placeholder="Choose a title to equip.",
@@ -858,7 +918,9 @@ class Views():
                             
                             if selection.lower() == "void avatar":
                                 selection = "void"
-                            
+                            if selection.lower() == "frost king":
+                                selection = "frostking"
+
                             complete_embed = discord.Embed(title = "Title change completed.")
 
                             await Database.Update_User_Title(member.id, selection.lower())
@@ -1631,6 +1693,25 @@ class Views():
                             await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                             await ctx.send(f"{target.mention}, you've been attacked!")
 
+                class FrostStaff_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(631047805133127680)
+                        super().__init__(
+                            label = "Frost Staff",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
+
+                        if user.id == user_id:
+                            key = "item16"
+                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await ctx.send(f"{target.mention}, you've been attacked!")
+
+
+
 
                 class Target_Menu(discord.ui.View):
                     # TODO Show items that can target the user
@@ -1785,6 +1866,17 @@ class Tools():
 
             else:
                 pass
+
+
+    # Getting all the user's items and checking for status immunity
+    async def Check_Stats_Immunity(user_id, status):
+        
+        if status == "frozen":
+            frost_crown = await Database.Fetch_Item_Amount(user_id, "item16")
+            if frost_crown > 0:
+                return "immune"
+            else:
+                return "freeze"
 
 
     # Function for giving loot chests
