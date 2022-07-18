@@ -22,3 +22,4 @@ class Preload():
         print("________________________________________")
     
     run_maven()
+    test = "test"

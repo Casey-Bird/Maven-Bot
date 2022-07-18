@@ -1,6 +1,8 @@
 
 import discord, json, asyncio, random
 import sqlite3 as sql
+import mysql.connector
+
 
 work_cooldowns = [] # Cooldown container for users who crafted recently
 fish_cooldowns = [] # Cooldown container for users who crafted recently
@@ -24,6 +26,11 @@ class Configuration():
 
 
 class Database():
+    # 
+    async def Migrate_Database(user_id):
+        pass
+
+
 
     # User creation.
     async def Create_User(user_id):
@@ -576,9 +583,10 @@ class Database():
         current_health = result[0]
 
         if type == "heal": # TODO Create embed send for healing
-            if current_health + use_health >= 100: # Set health to 100 and leave it be
-                h = 100
-                update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+            
+            if current_health + use_health > 100: # Set health to 100 and leave it be
+                health = 100
+                update_query = f"UPDATE users SET health = '{health}' WHERE id = {target.id}"
                 cursor.execute(update_query)
             else: # Update health normally
                 new_amount = current_health + use_health
