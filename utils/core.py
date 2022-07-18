@@ -1,7 +1,6 @@
 
 import discord, json, asyncio, random
 import sqlite3 as sql
-import mysql.connector
 
 
 work_cooldowns = [] # Cooldown container for users who crafted recently
@@ -26,11 +25,6 @@ class Configuration():
 
 
 class Database():
-    # 
-    async def Migrate_Database(user_id):
-        pass
-
-
 
     # User creation.
     async def Create_User(user_id):
@@ -216,6 +210,10 @@ class Database():
                 title = f"{bot.get_emoji(997989353060040875)} Frost King {bot.get_emoji(997989353060040875)}"
                 t_color = discord.Color.from_rgb(10,209,240)
 
+            if title_name == "frostlord":
+                title = f"{bot.get_emoji(998612997285097522)} Frost Lord {bot.get_emoji(998612997285097522)}"
+                t_color = discord.Color.from_rgb(10,209,240)
+
 
             return title, t_color
 
@@ -304,6 +302,10 @@ class Database():
 
         if "item16" in user_items:
             titles.append("frostking")
+
+        if "item18" in user_items:
+            titles.append("frostlord")
+
 
         return titles
         
@@ -456,6 +458,10 @@ class Database():
         if name in frostcrown_name:
             return "item17"
 
+        frostcirclet_name = ["frost circlet", "frostcirclet", "frost circlets"]
+        if name in frostcirclet_name:
+            return "item18"
+
 
         return "error"
 
@@ -581,10 +587,12 @@ class Database():
         cursor.execute(get_query)
         result = list(cursor.fetchall()[0])
         current_health = result[0]
+        
+        health_check = int(current_health) + int(use_health)
 
         if type == "heal": # TODO Create embed send for healing
             
-            if current_health + use_health > 100: # Set health to 100 and leave it be
+            if health_check > 100: # Set health to 100 and leave it be
                 health = 100
                 update_query = f"UPDATE users SET health = '{health}' WHERE id = {target.id}"
                 cursor.execute(update_query)
@@ -602,13 +610,13 @@ class Database():
                         tome_embed.add_field(name = f"A Forest Wisp comes to your aid!", value = f"**+1** {bot.get_emoji(993847218660446311)} Forest Wisp")
                         await Database.Update_User_Inventory(target.id, "item13", "add", 1)
             
+                stats_db.commit()
+                stats_db.close()
                 await interaction.response.edit_message(embed = tome_embed, view = None)
-        
 
         if type == "overheal":
             pass
         
-
         if type == "damage":
             
             if key == "item4": # Sword
@@ -625,9 +633,9 @@ class Database():
                     h = current_health - use_damage
                     update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
                     cursor.execute(update_query)
+                
                 stats_db.commit()
                 stats_db.close()
-
                 await interaction.response.edit_message(embed = embed, view = None)
 
             if key == "item13": # Forest Wisp
@@ -799,6 +807,7 @@ class Database():
         stats_db.close()
 
 
+
 class Views():
     
     # Get and Set Profile View
@@ -917,6 +926,13 @@ class Views():
                                 )
                                 options.append(option)
 
+                            if "frostlord" in raw_options: # If they are voidpapi.
+                                option = discord.SelectOption(
+                                    label = "Frost Lord", description = "Represent your status as a Frost Lord.", emoji = bot.get_emoji(998612997285097522)
+                                )
+                                options.append(option)
+
+
                             super().__init__(
                                 placeholder="Choose a title to equip.",
                                 options = options
@@ -930,6 +946,8 @@ class Views():
                                 selection = "void"
                             if selection.lower() == "frost king":
                                 selection = "frostking"
+                            if selection.lower() == "frost lord":
+                                selection = "frostlord"
 
                             complete_embed = discord.Embed(title = "Title change completed.")
 
@@ -1720,6 +1738,34 @@ class Views():
                             await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                             await ctx.send(f"{target.mention}, you've been attacked!")
 
+                class FrostCrown_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(997989353060040875)
+                        super().__init__(
+                            label = "Frost Crown",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
+
+                        if user.id == user_id:
+                            key = "item16"
+                            target_circlets = await Database.Fetch_Item_Amount(target.id, "item18")
+                            
+                            if target_circlets > 0: # They own one, take it away
+                                embed = discord.Embed(title = f"{target.name} has lost their Frost Lord blessing.", description = f"{bot.get_emoji(998612997285097522)} Frost Circlet **- 1**", color = discord.Color.from_rgb(10,209,240))
+
+                                await Database.Update_User_Inventory(target.id, "item18", "subtract", 1)
+                                await interaction.response.edit_message(embed = embed, view = None)
+                            
+                            else: # Give them a circlet
+                                embed = discord.Embed(title = f"{target.name} has been given the power of a Frost Lord", description = f"{bot.get_emoji(998612997285097522)} Frost Circlet **+ 1**", color = discord.Color.from_rgb(10,209,240))
+
+                                await Database.Update_User_Inventory(target.id, "item18", "add", 1)
+                                await interaction.response.edit_message(embed = embed, view = None)
+
 
                 class Target_Menu(discord.ui.View):
                     # TODO Show items that can target the user
@@ -1745,12 +1791,18 @@ class Views():
                     if "item15" in target_usable: # Forest Wisp
                         view.add_item(VoidKnife_Button())
 
+                    if "item16" in target_usable: # Frost Crown
+                        view.add_item(FrostCrown_Button())
+
                     if "item17" in target_usable: # Frost Staff
                         view.add_item(FrostStaff_Button())
 
                 message = await ctx.respond(embed = embed, view = view)
                 await Cooldowns.add_cooldown("use_target", user_id)
 
+    # Adventure View
+    async def Setup_Adventure(bot, ctx):
+        pass
 
 
 class Cooldowns():
@@ -1880,13 +1932,20 @@ class Tools():
 
     # Getting all the user's items and checking for status immunity
     async def Check_Stats_Immunity(user_id, status):
+        immunity = "freeze"
 
         frost_crown = await Database.Fetch_Item_Amount(user_id, "item16")
-        
         if frost_crown > 0:
-            return "immune"
-        else:
-            return "freeze"
+            immunity = "immune"
+        
+
+        frost_circlet = await Database.Fetch_Item_Amount(user_id, "item18")
+        if frost_circlet > 0:
+            immunity = "immune"
+
+
+
+        return immunity
 
 
     # Function for giving loot chests

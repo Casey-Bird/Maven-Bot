@@ -324,10 +324,48 @@
         "use_damage": 25,
         "self_usable": "true",
         "target_usable": "true"
+    },
+
+    "item18":{
+        "name": "Frost Circlet",
+        "key": "item18",
+        "description": "A piece of frost royalty given by the Frost King.",
+        "store_value": 0,
+        "emoji": 998612997285097522,
+        "rarity": 880040222526672907,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "false",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    },
+
+    "item19":{
+        "name": "Suspicious Meal",
+        "key": "item19",
+        "description": "Did you mean to make this...?",
+        "store_value": 469,
+        "emoji": 0,
+        "rarity": 880040222480543774,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {
+            "item2": 4,
+            "item3": 2
+        },
+        "use_description": "There's no way this tastes good.",
+        "use_health": 10,
+        "use_damage": 0,
+        "self_usable": "true",
+        "target_usable": "false"
     }
-
-
-
 
 
 }

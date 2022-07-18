@@ -364,6 +364,16 @@ class Economy_Module(commands.Cog):
         await Views.Setup_Trade(self.bot, ctx, ctx.author, target, your_item, your_amount, target_item, target_amount)
 
 
+    @slash_command(
+        name = "adventure",
+        description = "Adventure into unknown territory, beware of dangers."
+    )
+    async def adventure(
+        self, ctx
+    ):
+        pass
+
+
     ### Listeners & Events ###
 
     # Update messages for user's level
