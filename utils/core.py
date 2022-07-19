@@ -1,4 +1,5 @@
 
+from typing import Type
 import discord, json, asyncio, random
 import sqlite3 as sql
 
@@ -462,6 +463,39 @@ class Database():
         if name in frostcirclet_name:
             return "item18"
 
+        suspiciousmeal_name = ["suspicious", "suspicious meal", "suspiciousmeal"]
+        if name in suspiciousmeal_name:
+            return "item19"
+
+        ironore_name = ["iron ore", "iron ores", "ironore"]
+        if name in ironore_name:
+            return "item20"
+
+        ironingot_name = ["iron ingot", "iron ingots", "ironingot", "ironingots"]
+        if name in ironingot_name:
+            return "item21"
+
+        copperore_name = ["copper ore", "copper ores", "copperore", "copperores"]
+        if name in copperore_name:
+            return "item22"
+
+        copperingot_name = ["copper ingot", "copper ingots", "copperingot", "copperingots"]
+        if name in copperingot_name:
+            return "item23"
+
+        ironpickaxe_name = ["iron pickaxe", "iron pick", "ironpickaxe", "ironpickaxes", "iron picks"]
+        if name in ironpickaxe_name:
+            return "item24"
+
+        goldpickaxe_name = ["gold pickaxe", "golden pickaxes", "gold pickaxe", "golden pickaxe", "golden pick", "gold pick"]
+        if name in goldpickaxe_name:
+            return "item25"
+
+        bloodcrystal_name = ["blood crystal", "bloodcrystal", "blood crystals", "bloodcrystal", "bloodcrystals"]
+        if name in bloodcrystal_name:
+            return "item26"
+
+
 
         return "error"
 
@@ -858,13 +892,18 @@ class Views():
                     title, t_color = await Database.Fetch_Title(bot, member.id)
                     work_skill = skills["work_skill"]
                     fish_skill = skills["fish_skill"]
+                    hunt_skill = skills["hunt_skill"]
                     
                     fish_skill_name, fish_skill_description, fish_skill_emoji = await Tools.Create_Skill_Title("fish", fish_skill)
                     work_skill_name, work_skill_description, work_skill_emoji = await Tools.Create_Skill_Title("work", work_skill)
+                    hunt_skill_name, hunt_skill_description, hunt_skill_emoji = await Tools.Create_Skill_Title("hunt", hunt_skill)
 
                     skills_embed = discord.Embed(title = f"{member.name}'s Skills", description = f"{title}", color = t_color)
+                    
                     skills_embed.add_field(name = f"{bot.get_emoji(work_skill_emoji)} {work_skill_name}", value = f"{work_skill_description}", inline = False)
                     skills_embed.add_field(name = f"{bot.get_emoji(fish_skill_emoji)} {fish_skill_name}", value = f"{fish_skill_description} ", inline = False)
+                    skills_embed.add_field(name = f"{bot.get_emoji(hunt_skill_emoji)} {hunt_skill_name}", value = f"{hunt_skill_description} ", inline = False)
+
                     skills_embed.set_thumbnail(url = member.avatar.url)
                     skills_embed.set_footer(text= f"{status}", icon_url= ctx.author.avatar.url)
 
@@ -1098,12 +1137,12 @@ class Views():
         skill_gain = config["work_skill_amount"]
 
         iron_emoji = bot.get_emoji(998719555591479419)
-
+        copper_emoji = bot.get_emoji(998923967475761222)
 
         class Mining_View(discord.ui.View):
             
             @discord.ui.button(label = "Iron", style = discord.ButtonStyle.gray, emoji = iron_emoji)
-            async def first_option_callback(self, button: discord.Button, interaction: discord.Interaction):
+            async def iron_option_callback(self, button: discord.Button, interaction: discord.Interaction):
                 
                 if member.id == interaction.user.id:
                     
@@ -1119,6 +1158,29 @@ class Views():
 
                     await interaction.message.edit(
                         embed = iron_option_embed,
+                        view = None
+                    )
+
+                else:
+                    pass
+
+            @discord.ui.button(label = "Copper", style = discord.ButtonStyle.gray, emoji = copper_emoji)
+            async def copper_option_callback(self, button: discord.Button, interaction: discord.Interaction):
+                
+                if member.id == interaction.user.id:
+                    
+                    amount = random.randrange(13,26)
+
+                    copper_option_embed = discord.Embed(title = f"{member.name} went mining and found {bot.get_emoji(998923967475761222)} Copper Ore!", description=f"{title}", color = t_color)
+                    copper_option_embed.set_thumbnail(url = "https://i.imgur.com/lMMC2A0.png")
+                    copper_option_embed.add_field(name = "Amount Gained:", value = f"**+ {amount}** {bot.get_emoji(998923967475761222)} Copper Ore\n**+ {skill_gain}** {bot.get_emoji(998902721996398594)} Mining Skill")
+
+
+                    await Database.Update_User_Stats(member.id, "work_skill", "add", skill_gain)
+                    await Database.Update_User_Inventory(member.id, "item22", "add", amount)
+
+                    await interaction.message.edit(
+                        embed = copper_option_embed,
                         view = None
                     )
 
@@ -1827,6 +1889,168 @@ class Views():
             
             pass
 
+    # Crafting View
+    async def Setup_Craft(bot, ctx):
+        craftable_items = []
+        
+        title, t_color = await Database.Fetch_Title(bot, ctx.author.id)
+        items = await Database.Fetch_Itemlist()
+
+        menu_embed = discord.Embed(title = f"Crafting Menu")
+
+
+
+        i = 1
+        while i < 200: # Checking and adding all the craftable items
+            try:
+                key = "item"+f"{i}"
+                recipe = list(items[key]["recipe"])
+                if len(recipe) > 0:
+                    craftable_items.append(key)
+            
+            except:
+                pass
+
+            i+=1
+
+
+        class Smelt_Menu(discord.ui.View): # For all ore-related crafting
+            pass
+
+        class Smelt_Selection(discord.ui.Select):
+            
+            def __init__(self):
+                options = [
+                    discord.SelectOption(label = "Iron Ingot", description = "Craft 10x Iront Ingots.", emoji = bot.get_emoji(998910308624125972)),
+                    discord.SelectOption(label = "Copper Ingot", description = "Craft 10x Copper Ingots.", emoji = bot.get_emoji(998924031258546296))
+                ]
+
+                super().__init__(
+                    placeholder="Choose which item to craft.",
+                    options = options
+                )
+
+            async def callback(self, interaction: discord.Interaction):
+                selection = self.values[0]
+                if interaction.user.id == ctx.author.id:
+                    
+                    if selection.lower() == "iron ingot":
+                        key = "item21"
+                        ore_key = "item20"
+                        craft_amount = 10
+
+                        iron_ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, key)
+                        recipe = list(items[key]["recipe"])
+
+                        checks = []
+
+                        i = 0
+                        while i < 10:
+                            try:
+                                item = recipe[i]
+                                item_amount = recipe[i+1]
+                                amount_required = item_amount * 10
+
+                                if iron_ore_amount >= amount_required: # They can craft, continue
+                                    checks.append("complete")
+                                else:
+                                    checks.append("fail")
+                            except:
+                                pass
+
+                            i += 2
+                            
+                        if "fail" in checks: # Something went wrong with the craft
+                            fail_embed = discord.Embed(title = f"{ctx.author.name} failed to craft. Make sure you have enough ingredients!", description=title, color = t_color)
+                            
+                            
+                            await interaction.response.edit_message(embed = fail_embed, view = None)
+
+                        
+                        else: # Continue craft
+                            craft_embed = discord.Embed(title = f"{ctx.author.name} Crafted Iron", description=title, color = t_color)
+                            craft_embed.add_field(name = "Craft Amount:", value = f"**+ 10** {bot.get_emoji(998910308624125972)} Iron Ingots")
+                            craft_embed.set_thumbnail(url = "https://i.imgur.com/RKcUo9h.png")
+
+
+                            for k,v in items[key]["recipe"].items():
+                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", v)
+
+
+                            await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
+                            await interaction.response.edit_message(embed = craft_embed, view = None)
+
+                    if selection.lower() == "copper ingot":
+                        key = "item23"
+                        ore_key = "item22"
+                        craft_amount = 10
+
+                        iron_ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, key)
+                        recipe = list(items[key]["recipe"])
+
+                        checks = []
+
+                        i = 0
+                        while i < 10:
+                            try:
+                                item = recipe[i]
+                                item_amount = recipe[i+1]
+                                amount_required = item_amount * 10
+
+                                if iron_ore_amount >= amount_required: # They can craft, continue
+                                    checks.append("complete")
+                                else:
+                                    checks.append("fail")
+                            except:
+                                pass
+
+                            i += 2
+                            
+                        if "fail" in checks: # Something went wrong with the craft
+                            fail_embed = discord.Embed(title = f"{ctx.author.name} failed to craft. Make sure you have enough ingredients!", description=title, color = t_color)
+                            
+                            
+                            await interaction.response.edit_message(embed = fail_embed, view = None)
+
+                        else: # Continue craft
+                            craft_embed = discord.Embed(title = f"{ctx.author.name} Crafted Copper", description=title, color = t_color)
+                            craft_embed.add_field(name = "Craft Amount:", value = f"**+ 10** {bot.get_emoji(998924031258546296)} Copper Ingots")
+                            craft_embed.set_thumbnail(url = "https://i.imgur.com/tNF62fH.png")
+
+
+                            for k,v in items[key]["recipe"].items():
+                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", v)
+
+
+                            await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
+                            await interaction.response.edit_message(embed = craft_embed, view = None)
+
+
+        class Craft_Menu(discord.ui.View): # Selection menu for choosing a crafting category
+
+            @discord.ui.button(
+                label="Smelting",
+                style=discord.ButtonStyle.blurple
+            )
+            async def smelting_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+                if ctx.author.id == interaction.user.id:
+                    title, t_color = await Database.Fetch_Title(bot, ctx.author.id)
+                    
+                    smelt_embed = discord.Embed(title = f"Smelting Menu", description = f"{title}", color = t_color)
+
+                    smelt_embed.add_field(name = f"**10x** {bot.get_emoji(998910308624125972)} Iron Ingots", value = f"Perfectly smelted iron molded into the shape of a bar.")
+                    smelt_embed.add_field(name = f"**10x** {bot.get_emoji(998924031258546296)} Copper Ingots", value = f"Copper ore smelted into an ingot of pure metal.")
+                    smelt_embed.set_thumbnail(url = "https://i.imgur.com/7LykRWg.png")
+
+
+                    view = Smelt_Menu()
+                    view.add_item(Smelt_Selection())
+                    await interaction.response.edit_message(embed = smelt_embed, view = view)
+
+
+
+
+        await ctx.respond(embed = menu_embed, view = Craft_Menu())
 
 
 
@@ -1839,7 +2063,7 @@ class Cooldowns():
     async def add_cooldown(cooldown, user_id):
         config = await Configuration.Fetch_Configuration_File()
         
-        if str(cooldown).lower() == "work":
+        if cooldown == "work":
             work_cooldowns.append(user_id)
             await asyncio.sleep(config["work_cooldown"]) # Use configuration file to determine cooldown length
             work_cooldowns.remove(user_id)
@@ -1866,7 +2090,7 @@ class Cooldowns():
 
     # Retrieve cooldowns
     async def get_cooldowns(cooldown):
-        if str(cooldown).lower() == "work":
+        if cooldown == "work":
             return work_cooldowns
         if cooldown == "fish":
             return fish_cooldowns
@@ -1917,6 +2141,14 @@ class Tools():
             if int(skill_amount) >= 0:
                 skill_emoji = 998902721996398594
                 skill_name = "Mining Newb"
+                skill_description = f"**Skill: ({skill_amount})**"
+                
+                return skill_name, skill_description, skill_emoji
+
+        if skill_name == "hunt":
+            if int(skill_amount) >= 0:
+                skill_emoji = 819685239306715207
+                skill_name = "Bad Shot"
                 skill_description = f"**Skill: ({skill_amount})**"
                 
                 return skill_name, skill_description, skill_emoji

@@ -405,8 +405,109 @@
         "use_damage": 0,
         "self_usable": "false",
         "target_usable": "false"
-    }
+    },
 
+    "item22":{
+        "name": "Copper Ore",
+        "key": "item22",
+        "description": "Copper in it's raw form.",
+        "store_value": 2,
+        "emoji": 998923967475761222,
+        "rarity": 880040222480543774,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "true",
+        "can_trade": "true",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    },
+
+    "item23":{
+        "name": "Copper Ingot",
+        "key": "item23",
+        "description": "Copper ore smelted into an ingot of pure metal.",
+        "store_value": 23,
+        "emoji": 998924031258546296,
+        "rarity": 880040222480543774,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "true",
+        "can_trade": "true",
+        "recipe": {
+            "item22": 10
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    },
+
+    "item24":{
+        "name": "Iron Pickaxe",
+        "key": "item23",
+        "description": "This pickaxe will boost all your mining yield by **1.2x**! It can also break during use.",
+        "store_value": 6000,
+        "emoji": 998902721996398594,
+        "rarity": 880040222480543774,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {
+            "item21": 110
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    },
+
+    "item25":{
+        "name": "Gold Pickaxe",
+        "key": "item25",
+        "description": "Made of pure gold, this pickaxe will **DOUBLE** all mining yield, and it **never** breaks!",
+        "store_value": 0,
+        "emoji": 998902106062860290,
+        "rarity": 880040222367289385,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {
+            "item11": 100
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    },
+
+    "item26":{
+        "name": "Blood Crystal",
+        "key": "item26",
+        "description": "Essence of pure evil, this crystal can be formed into a multitude of shapes and forms.",
+        "store_value": 0,
+        "emoji": 631204761403654155,
+        "rarity": 880040222526672907,
+        "shop": "none",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
+    }
 
 
 
