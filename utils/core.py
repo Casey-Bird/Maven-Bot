@@ -1939,30 +1939,20 @@ class Views():
                         ore_key = "item20"
                         craft_amount = 10
 
-                        iron_ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, key)
+                        iron_ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, ore_key)
                         recipe = list(items[key]["recipe"])
 
                         checks = []
 
-                        i = 0
-                        while i < 10:
-                            try:
-                                item = recipe[i]
-                                item_amount = recipe[i+1]
-                                amount_required = item_amount * 10
-
-                                if iron_ore_amount >= amount_required: # They can craft, continue
-                                    checks.append("complete")
-                                else:
-                                    checks.append("fail")
-                            except:
-                                pass
-
-                            i += 2
+                        amount_required = items[key]["recipe"][ore_key] * 10
+                        if iron_ore_amount >= amount_required:
+                            checks.append("complete")
+                        else:
+                            checks.append("fail")
                             
+
                         if "fail" in checks: # Something went wrong with the craft
                             fail_embed = discord.Embed(title = f"{ctx.author.name} failed to craft. Make sure you have enough ingredients!", description=title, color = t_color)
-                            
                             
                             await interaction.response.edit_message(embed = fail_embed, view = None)
 
@@ -1974,7 +1964,8 @@ class Views():
 
 
                             for k,v in items[key]["recipe"].items():
-                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", v)
+                                lose_amount = v * 10
+                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", lose_amount)
 
 
                             await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
@@ -1985,27 +1976,18 @@ class Views():
                         ore_key = "item22"
                         craft_amount = 10
 
-                        iron_ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, key)
+                        ore_amount = await Database.Fetch_Item_Amount(ctx.author.id, ore_key)
                         recipe = list(items[key]["recipe"])
 
                         checks = []
 
-                        i = 0
-                        while i < 10:
-                            try:
-                                item = recipe[i]
-                                item_amount = recipe[i+1]
-                                amount_required = item_amount * 10
-
-                                if iron_ore_amount >= amount_required: # They can craft, continue
-                                    checks.append("complete")
-                                else:
-                                    checks.append("fail")
-                            except:
-                                pass
-
-                            i += 2
+                        amount_required = items[key]["recipe"][ore_key] * 10
+                        if ore_amount >= amount_required:
+                            checks.append("complete")
+                        else:
+                            checks.append("fail")
                             
+
                         if "fail" in checks: # Something went wrong with the craft
                             fail_embed = discord.Embed(title = f"{ctx.author.name} failed to craft. Make sure you have enough ingredients!", description=title, color = t_color)
                             
@@ -2019,7 +2001,8 @@ class Views():
 
 
                             for k,v in items[key]["recipe"].items():
-                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", v)
+                                lose_amount = v * 10
+                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", lose_amount)
 
 
                             await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
