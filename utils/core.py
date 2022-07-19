@@ -25,12 +25,40 @@ class Configuration():
 
 
 
+
 class Database():
 
     # User creation.
     async def Create_User(user_id):
 
+        def Create_Skills(user_id):
+            skills_db = sql.connect("./data/skills_db.db")
+            cursor = skills_db.cursor()
+            query = f"INSERT INTO users (id) VALUES ({user_id})"
+            cursor.execute(query)
+            skills_db.commit()
+            skills_db.close()
+
+
+        def Check_Existing_Skills(user_id):
+            skills_db = sql.connect("./data/skills_db.db")
+            cursor = skills_db.cursor()
+
+            query = f"SELECT * FROM users WHERE id = {user_id}"
+
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            if not result: # Result didn't fetch anything
+                Create_Skills(user_id)
+            else:
+                pass
+            
+            skills_db.close()
+
+
         def Create_User_Info(user_id):
+
             user_db = sql.connect("./data/user_db.db")
             cursor = user_db.cursor()
             query = f"INSERT INTO users (id) VALUES ({user_id})"
@@ -77,6 +105,7 @@ class Database():
             user_db.close()
 
         Check_Existing(user_id)
+        Check_Existing_Skills(user_id)
 
     # Fetch all the shopable items and return them
     async def Fetch_Shopables(guild_id):
@@ -109,6 +138,13 @@ class Database():
     # Fetch the entire items.json file
     async def Fetch_Itemlist():
         file = open("./data/items.json")
+        data = json.load(file)
+
+        return data
+
+    # Fetch the entire items.json file
+    async def Fetch_Skills():
+        file = open("./data/skills.json")
         data = json.load(file)
 
         return data
@@ -842,6 +878,7 @@ class Database():
 
 
 
+
 class Views():
     
     # Get and Set Profile View
@@ -898,7 +935,7 @@ class Views():
                     work_skill_name, work_skill_description, work_skill_emoji = await Tools.Create_Skill_Title("work", work_skill)
                     hunt_skill_name, hunt_skill_description, hunt_skill_emoji = await Tools.Create_Skill_Title("hunt", hunt_skill)
 
-                    skills_embed = discord.Embed(title = f"{member.name}'s Skills", description = f"{title}", color = t_color)
+                    skills_embed = discord.Embed(title = f"{member.name}'s Statistics", description = f"{title}", color = t_color)
                     
                     skills_embed.add_field(name = f"{bot.get_emoji(work_skill_emoji)} {work_skill_name}", value = f"{work_skill_description}", inline = False)
                     skills_embed.add_field(name = f"{bot.get_emoji(fish_skill_emoji)} {fish_skill_name}", value = f"{fish_skill_description} ", inline = False)
@@ -1012,6 +1049,29 @@ class Views():
                     return
 
 
+            @discord.ui.button(
+                label="Skills",
+                style=discord.ButtonStyle.blurple
+            )
+            async def skills_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+                if member.id == interaction.user.id: # Continue code
+                    # TODO Skills embed should show all 5 slots
+                    title, t_color = await Database.Fetch_Title(bot, member.id)
+                
+
+                    skills_embed = discord.Embed(title = f"{member.name}'s Skills", description = f"{title}", color = t_color)
+                    skills_embed.set_thumbnail(url = member.avatar.url)
+                    skills_embed.set_footer(text= f"{status}", icon_url= ctx.author.avatar.url)
+
+
+                    await interaction.response.edit_message(embed = skills_embed, view = ProfileView())
+
+                else: # Not the correct user
+                    return
+
+
+
+
         view = ProfileView()
         return embed, view
 
@@ -1021,27 +1081,39 @@ class Views():
         stats = await Database.Fetch_Stats(user_id)
         title, t_color = await Database.Fetch_Title(bot, user_id)
         config = await Configuration.Fetch_Configuration_File()
+        
+        fish_amount = config["fish_amount"]
+        fish_skill_amount = config["fish_skill_amount"]
 
         if stats["fish_skill"] >= 0:
-            chances = [1,1,1,2,1,1,1,2,1,1,1,2,1,1,1]
+            chances = [1,3,1,2,1,3,1,2,1,1,1,2,1,3,1]
             chance = random.choice(chances)
 
-            if chance == 1:
-                fish_amount = config["fish_amount"]
-                fish_skill_amount = config["fish_skill_amount"]
+            if chance == 1: # Caught sea bass
                 await Database.Update_User_Inventory(user_id, "item5", "add", 1)
                 await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
 
                 embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
                 embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415255582)} Sea Bass", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+                embed.set_thumbnail(url = "https://i.imgur.com/z9llFQr.png")
 
                 return embed
 
-            if chance == 2:
+            if chance == 2: # Line Broke
                 await Database.Update_User_Stats(user_id, "fish_skill", "subtract", 1)
                 
                 embed = discord.Embed(title = f"{user.name} Your Line Broke!", description = f"{title}", color = t_color)
                 embed.add_field(name = f"Your line broke and you caught nothing.", value = f"**- 1** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+
+                return embed
+
+            if chance == 3: # Caught mackeral
+                await Database.Update_User_Inventory(user_id, "item27", "add", fish_amount)
+                await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
+
+                embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
+                embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415267840)} Mackeral", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+                embed.set_thumbnail(url = "https://i.imgur.com/YCWAbtZ.png")
 
                 return embed
 
@@ -1880,14 +1952,30 @@ class Views():
 
     # Adventure View
     async def Setup_Adventure(bot, ctx):
-        # TODO Create different views based on selection
-        # TODO Create adventure selection menu
-        # TODO A helper function to figure out all locations a user can visit with the current context.
+        title, t_color = await Database.Fetch_Title(bot, ctx.author.id)
+        status = await Tools.Generate_Status(ctx.author.id)
+
+        viridian_emoji = bot.get_emoji(994736483644747918)
+
+        adventure_embed = discord.Embed(title = f"{ctx.author.name} began Adventuring!", description = title, color = t_color)
+        adventure_embed.add_field(name = f"{viridian_emoji} The Viridian", value = "The Viridian is home to boundless mystical creatures and ancient spirits. The forest of a thousand paths.")
+        adventure_embed.set_image(url = "https://i.imgur.com/Lr8C4RO.jpg")
+        adventure_embed.set_footer(text= f"{status}", icon_url= ctx.author.avatar.url)
+        
 
         class Adventure_Menu(discord.ui.View):
-            # Selection menu for choosing a location to adventure to
             
-            pass
+            @discord.ui.button(label = "The Viridian", style = discord.ButtonStyle.grey, emoji = viridian_emoji)
+            async def viridian_callback(self, button: discord.Button, interaction: discord.Interaction):
+                if interaction.user.id == ctx.author.id:
+                    await Viridian.Setup_Viridian(ctx, bot, interaction)
+                else:
+                    pass
+
+            
+
+        Adventure_View = Adventure_Menu()
+        await ctx.respond(embed = adventure_embed, view = Adventure_View)
 
     # Crafting View
     async def Setup_Craft(bot, ctx):
@@ -2038,8 +2126,6 @@ class Views():
 
 
 
-
-
 class Cooldowns():
 
     # Adds cooldowns to the cooldown container
@@ -2082,8 +2168,9 @@ class Cooldowns():
 
 
 
+
 class Tools():
-    
+    # Creating the emojis and health for status
     async def Generate_Status(user_id):
         stats = await Database.Fetch_Stats(user_id)
         health = stats["health"]
@@ -2109,8 +2196,7 @@ class Tools():
         
         return status
 
-
-    # Creating skill title
+    # Creating stats title
     async def Create_Skill_Title(skill_name, skill_amount):
         if skill_name == "fish":
             if int(skill_amount) >= 0:
@@ -2135,6 +2221,31 @@ class Tools():
                 skill_description = f"**Skill: ({skill_amount})**"
                 
                 return skill_name, skill_description, skill_emoji
+
+    # Creating skill slots for profile
+    async def Generate_Skill_Slots(bot, user_id):
+        skills_list = Database.Fetch_Skills()
+
+        skills_db = sql.connect("./data/skills_db.db")
+        cursor = skills_db.cursor()
+
+        get_query = f"SELECT slot1,slot2,slot3,slot4,slot5 FROM users WHERE id = {user_id}"
+        cursor.execute(get_query)
+        result = list(cursor.fetchall()[0])
+        
+        slot1 = result[0]
+        slot2 = result[1]
+        slot3 = result[2]
+        slot4 = result[3]
+        slot5 = result[4]
+
+        if slot1 == "none":
+            pass
+
+
+
+        skills_db.close()
+
 
     # Generating item use information
     async def Generate_Use_Info(key):
@@ -2213,3 +2324,12 @@ class Tools():
             if chance == 2: # Give them a crate
                 await Database.Update_User_Inventory(user_id, "item10", "add", 1)
                 await ctx.respond(f"{ctx.author.mention}, you found a {bot.get_emoji(887651039573082122)} **Basic Loot Chest**!")
+
+
+
+
+class Viridian(): # Viridian adventure location
+    
+    async def Setup_Viridian(ctx, bot, interaction):
+        
+        pass

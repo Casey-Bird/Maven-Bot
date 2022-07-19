@@ -507,6 +507,26 @@
         "use_damage": 0,
         "self_usable": "false",
         "target_usable": "false"
+    },
+
+    "item27":{
+        "name": "Mackeral",
+        "key": "item27",
+        "description": "Holy mackeral thats a big fish.",
+        "store_value": 63,
+        "emoji": 888412218415267840,
+        "rarity": 880040222480543774,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "true",
+        "can_trade": "true",
+        "recipe": {
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
     }
 
 
