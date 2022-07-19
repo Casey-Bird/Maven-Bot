@@ -373,6 +373,16 @@ class Economy_Module(commands.Cog):
     ):
         await Views.Setup_Adventure(self.bot, ctx)
 
+    @slash_command(
+        name = "craft",
+        description = "Craft new and exciting items to help you conquer discord servers."
+    )
+    async def craft(
+        self, ctx
+    ):
+        pass
+
+
 
     ### Listeners & Events ###
 

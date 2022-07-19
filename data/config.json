@@ -17,7 +17,7 @@
     "hunt_amount": 1,
 
     "fish_skill_amount": 1,
-    "dig_skill_amount": 1,
+    "work_skill_amount": 1,
     "hunt_skill_amount": 1,
 
     "use_cooldown": 30,

@@ -858,11 +858,13 @@ class Views():
                     title, t_color = await Database.Fetch_Title(bot, member.id)
                     work_skill = skills["work_skill"]
                     fish_skill = skills["fish_skill"]
+                    
                     fish_skill_name, fish_skill_description, fish_skill_emoji = await Tools.Create_Skill_Title("fish", fish_skill)
+                    work_skill_name, work_skill_description, work_skill_emoji = await Tools.Create_Skill_Title("work", work_skill)
 
                     skills_embed = discord.Embed(title = f"{member.name}'s Skills", description = f"{title}", color = t_color)
-                    skills_embed.add_field(name = f"Work Skill:", value = f"{work_skill}", inline = False)
-                    skills_embed.add_field(name = f"{bot.get_emoji(fish_skill_emoji)} {fish_skill_name} ", value = f"{fish_skill_description} ", inline = False)
+                    skills_embed.add_field(name = f"{bot.get_emoji(work_skill_emoji)} {work_skill_name}", value = f"{work_skill_description}", inline = False)
+                    skills_embed.add_field(name = f"{bot.get_emoji(fish_skill_emoji)} {fish_skill_name}", value = f"{fish_skill_description} ", inline = False)
                     skills_embed.set_thumbnail(url = member.avatar.url)
                     skills_embed.set_footer(text= f"{status}", icon_url= ctx.author.avatar.url)
 
@@ -1087,30 +1089,42 @@ class Views():
     # Get and Set Work View
     async def Setup_Mining(bot, member):
         title, t_color = await Database.Fetch_Title(bot, member.id)
+        config = await Configuration.Fetch_Configuration_File()
 
-        embed = discord.Embed(title = f"{member}'s Began Working", description = f"{title}", color = t_color)
-        embed.add_field(name = "Press the button", value = "to mine silver.")
+        embed = discord.Embed(title = f"{member.name} Began Mining", description = f"{title}", color = t_color)
+        embed.add_field(name = "Select which ore you want to mine.", value = "Do /craft to smelt your ores into ingots.")
         embed.set_thumbnail(url = member.avatar.url)
+
+        skill_gain = config["work_skill_amount"]
+
+        iron_emoji = bot.get_emoji(998719555591479419)
+
 
         class Mining_View(discord.ui.View):
             
-            @discord.ui.button(label = "Iron", style = discord.ButtonStyle.blurple)
+            @discord.ui.button(label = "Iron", style = discord.ButtonStyle.gray, emoji = iron_emoji)
             async def first_option_callback(self, button: discord.Button, interaction: discord.Interaction):
                 
                 if member.id == interaction.user.id:
                     
-                    amount = random.randrange(10,100)
+                    amount = random.randrange(6,23)
 
-                    first_option_embed = discord.Embed(title = f"Nice! You mined up {bot.get_emoji(985978616741511208)} {amount} silver bars!", description=f"{title}", color = t_color)
-                    await Database.Update_Balance(member.id, "wallet", amount)
+                    iron_option_embed = discord.Embed(title = f"{member.name} went mining and found {bot.get_emoji(998719555591479419)} Iron Ore!", description=f"{title}", color = t_color)
+                    iron_option_embed.set_thumbnail(url = "https://i.imgur.com/liGAqlO.png")
+                    iron_option_embed.add_field(name = "Amount Gained:", value = f"**+ {amount}** {bot.get_emoji(998719555591479419)} Iron Ore\n**+ {skill_gain}** {bot.get_emoji(998902721996398594)} Mining Skill")
+
+
+                    await Database.Update_User_Stats(interaction.user.id, "work_skill", "add", skill_gain)
+                    await Database.Update_User_Inventory(interaction.user.id, "item20", "add", amount)
 
                     await interaction.message.edit(
-                        embed = first_option_embed,
+                        embed = iron_option_embed,
                         view = None
                     )
 
                 else:
                     pass
+
 
 
         view = Mining_View()
@@ -1894,11 +1908,18 @@ class Tools():
         if skill_name == "fish":
             if int(skill_amount) >= 0:
                 skill_emoji = 888402427647254538
-                skill_name = "New Fisher"
+                skill_name = "Small Fry"
                 skill_description = f"**Skill: ({skill_amount})**"
                 
                 return skill_name, skill_description, skill_emoji
-
+        
+        if skill_name == "work":
+            if int(skill_amount) >= 0:
+                skill_emoji = 998902721996398594
+                skill_name = "Mining Newb"
+                skill_description = f"**Skill: ({skill_amount})**"
+                
+                return skill_name, skill_description, skill_emoji
 
     # Generating item use information
     async def Generate_Use_Info(key):

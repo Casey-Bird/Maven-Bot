@@ -384,7 +384,30 @@
         "use_damage": 0,
         "self_usable": "false",
         "target_usable": "false"
+    },
+
+    "item21":{
+        "name": "Iron Ingot",
+        "key": "item21",
+        "description": "Perfectly smelted iron molded into the shape of a bar.",
+        "store_value": 60,
+        "emoji": 998910308624125972,
+        "rarity": 880040222480543774,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "true",
+        "can_trade": "true",
+        "recipe": {
+            "item20": 10
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
     }
+
+
 
 
 }
