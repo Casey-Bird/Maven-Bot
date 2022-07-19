@@ -1085,17 +1085,18 @@ class Views():
         )
 
     # Get and Set Work View
-    async def Setup_Work(bot, member):
+    async def Setup_Mining(bot, member):
         title, t_color = await Database.Fetch_Title(bot, member.id)
 
         embed = discord.Embed(title = f"{member}'s Began Working", description = f"{title}", color = t_color)
         embed.add_field(name = "Press the button", value = "to mine silver.")
         embed.set_thumbnail(url = member.avatar.url)
 
-        class Work_View(discord.ui.View):
+        class Mining_View(discord.ui.View):
             
-            @discord.ui.button(label = "1", style = discord.ButtonStyle.blurple)
+            @discord.ui.button(label = "Iron", style = discord.ButtonStyle.blurple)
             async def first_option_callback(self, button: discord.Button, interaction: discord.Interaction):
+                
                 if member.id == interaction.user.id:
                     
                     amount = random.randrange(10,100)
@@ -1111,7 +1112,8 @@ class Views():
                 else:
                     pass
 
-        view = Work_View()
+
+        view = Mining_View()
         return embed, view
 
     # Get and Set Shop View
@@ -1802,7 +1804,19 @@ class Views():
 
     # Adventure View
     async def Setup_Adventure(bot, ctx):
-        pass
+        # TODO Create different views based on selection
+        # TODO Create adventure selection menu
+        # TODO A helper function to figure out all locations a user can visit with the current context.
+
+        class Adventure_Menu(discord.ui.View):
+            # Selection menu for choosing a location to adventure to
+            
+            pass
+
+
+
+
+
 
 
 class Cooldowns():

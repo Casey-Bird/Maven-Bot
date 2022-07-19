@@ -29,7 +29,7 @@ class Economy_Module(commands.Cog):
         )
 
 
-    jobs = ["Work", "Fish", "Hunt"]
+    jobs = ["Mine", "Fish", "Hunt"]
     @slash_command(
         name = "job",
         description = "Select a job to earn unique rewards, currency, and skill!"
@@ -42,12 +42,12 @@ class Economy_Module(commands.Cog):
         user_id = ctx.author.id
         await Database.Create_User(user_id)
 
-        if job == "Work":
+        if job == "Mine":
             cooldowns = await Cooldowns.get_cooldowns("work")
             if user_id in cooldowns: # User is on cooldown
                 await ctx.respond("You are on cooldown!")
             else: # User is not on cooldown
-                embed, work_view = await Views.Setup_Work(self.bot, ctx.author)
+                embed, work_view = await Views.Setup_Mining(self.bot, ctx.author)
                 message = await ctx.respond(
                     embed = embed,
                     view = work_view
@@ -112,8 +112,8 @@ class Economy_Module(commands.Cog):
         description = "Withdraw your silver from your bank."
     )
     async def withdraw(self, ctx, amount: discord.Option(int, description = "How much would you like to withdraw?", default = 1000)):
-        await Database.Create_User(user_id)
         user_id = ctx.author.id
+        await Database.Create_User(user_id)
         title, t_color = await Database.Fetch_Title(self.bot, user_id)
         wallet, bank = await Database.Fetch_Balance(self.bot, user_id)
 
@@ -371,7 +371,7 @@ class Economy_Module(commands.Cog):
     async def adventure(
         self, ctx
     ):
-        pass
+        await Views.Setup_Adventure(self.bot, ctx)
 
 
     ### Listeners & Events ###

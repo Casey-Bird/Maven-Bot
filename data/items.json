@@ -365,6 +365,25 @@
         "use_damage": 0,
         "self_usable": "true",
         "target_usable": "false"
+    },
+
+    "item20":{
+        "name": "Iron Ore",
+        "key": "item20",
+        "description": "Iron in it's raw form.",
+        "store_value": 6,
+        "emoji": 998719555591479419,
+        "rarity": 880040222480543774,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "true",
+        "can_trade": "true",
+        "recipe": {},
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 0,
+        "self_usable": "false",
+        "target_usable": "false"
     }
 
 
