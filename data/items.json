@@ -185,12 +185,7 @@
         "use_health": 0,
         "use_damage": 0,
         "self_usable": "true",
-        "target_usable": "false",
-        "drop_table": {
-            "item9": 5,
-            "item7": 10,
-            "item11": 1
-        }
+        "target_usable": "false"
     },
 
     "item11":{

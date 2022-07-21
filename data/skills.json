@@ -1,7 +1,8 @@
 {
     "skill1": {
         "name": "Quickstep",
-        "description": "Quickstep description",
-        "emoji": 0
+        "description": "You're fast! Have a small chance to completely dodge an attack.",
+        "emoji": 999082619520176269,
+        "cost": 20
     }
 }

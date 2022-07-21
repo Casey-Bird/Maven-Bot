@@ -1,6 +1,6 @@
 {
     "bot_version": 0.0,
-    "max_items": 30,
+    "max_items": 100,
     "event": "normal",
     "admins": [155751780674699264, 470650378271326208],
 

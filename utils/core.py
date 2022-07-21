@@ -1,5 +1,5 @@
 
-from typing import Type
+
 import discord, json, asyncio, random
 import sqlite3 as sql
 
@@ -134,6 +134,33 @@ class Database():
             i += 1
         
         return normal_shop_keys
+
+    # Fetch all the skills the user owns
+    async def Fetch_User_Skills(user_id):
+        config = await Configuration.Fetch_Configuration_File()
+
+        skills_db = sql.connect("./data/skills_db.db")
+        cursor = skills_db.cursor()
+        # Depending on skills will edit the query and check for those items...if more than 0 then add to list
+
+        user_skills = []
+
+        i = 1
+        while i < config["max_items"]:
+            try:
+                get_query = f"SELECT skill{str(i)} FROM users WHERE id = {user_id}"
+                cursor.execute(get_query)
+                result = list(cursor.fetchall()[0])
+                item_amount = result[0]
+                if item_amount > 0:
+                    user_skills.append(f"skill{str(i)}")
+            except:
+                pass
+
+            i += 1
+        
+        skills_db.close()
+        return user_skills
 
     # Fetch the entire items.json file
     async def Fetch_Itemlist():
@@ -787,6 +814,10 @@ class Database():
 
                 await interaction.response.edit_message(embed = embed, view = None)
 
+    # Give user skill stones
+    async def Update_User_Skillstone(user_id):
+        pass
+
     # Update User's Inventory
     async def Update_User_Inventory(user_id, key, change, amount):
         inventory_db = sql.connect("./data/inventory_db.db")
@@ -1055,20 +1086,48 @@ class Views():
             )
             async def skills_button_callback(self, button: discord.Button, interaction: discord.Interaction):
                 if member.id == interaction.user.id: # Continue code
-                    # TODO Skills embed should show all 5 slots
+                    # TODO Make "my skills" button, "skill shop" button, "buy skills" button, selection for all skills to buy
+                    # TODO Make 5 selections for each slot, check user's skill inventory
                     title, t_color = await Database.Fetch_Title(bot, member.id)
-                
+
+                    
+                    class Skillshop_Button(discord.ui.Button):
+                        def __init__(self):
+                            emoji = bot.get_emoji(999112808593641572)
+                            super().__init__(
+                                label = "Skill Shop",
+                                style = discord.ButtonStyle.green,
+                                emoji = emoji
+                            )
+                        async def callback(self, interaction: discord.Interaction):
+                            user = interaction.user
+                            title, t_color = await Database.Fetch_Title(bot, member.id)
+                            if user.id == member.id:
+                                page = 1
+                                # TODO Create skillshop view with page buttons
+                                # TODO Create selections for buying skills with skill stones
+                                # TODO Add the ability to buy skills if they don't already own it
+                                skillembed = await Tools.Generate_Skill_Shop(bot, ctx, member.id, page)
+                                await interaction.response.edit_message(embed = skillembed, view = ProfileView())
+
+
+                            else:
+                                pass
+
+
 
                     skills_embed = discord.Embed(title = f"{member.name}'s Skills", description = f"{title}", color = t_color)
+                    await Tools.Generate_Skill_Slots(bot, member.id, skills_embed)
                     skills_embed.set_thumbnail(url = member.avatar.url)
                     skills_embed.set_footer(text= f"{status}", icon_url= ctx.author.avatar.url)
 
 
-                    await interaction.response.edit_message(embed = skills_embed, view = ProfileView())
+                    view = ProfileView()
+                    view.add_item(Skillshop_Button())
+                    await interaction.response.edit_message(embed = skills_embed, view = view)
 
                 else: # Not the correct user
                     return
-
 
 
 
@@ -1079,43 +1138,43 @@ class Views():
     async def Setup_Fish(bot, user):
         user_id = user.id
         stats = await Database.Fetch_Stats(user_id)
+        print(stats)
         title, t_color = await Database.Fetch_Title(bot, user_id)
         config = await Configuration.Fetch_Configuration_File()
         
         fish_amount = config["fish_amount"]
         fish_skill_amount = config["fish_skill_amount"]
 
-        if stats["fish_skill"] >= 0:
-            chances = [1,3,1,2,1,3,1,2,1,1,1,2,1,3,1]
-            chance = random.choice(chances)
+        chances = [1,3,1,2,1,3,1,2,1,1,1,2,1,3,1]
+        chance = random.choice(chances)
 
-            if chance == 1: # Caught sea bass
-                await Database.Update_User_Inventory(user_id, "item5", "add", 1)
-                await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
+        if chance == 1: # Caught sea bass
+            await Database.Update_User_Inventory(user_id, "item5", "add", 1)
+            await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
 
-                embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
-                embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415255582)} Sea Bass", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
-                embed.set_thumbnail(url = "https://i.imgur.com/z9llFQr.png")
+            embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
+            embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415255582)} Sea Bass", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+            embed.set_thumbnail(url = "https://i.imgur.com/z9llFQr.png")
 
-                return embed
+            return embed
 
-            if chance == 2: # Line Broke
-                await Database.Update_User_Stats(user_id, "fish_skill", "subtract", 1)
-                
-                embed = discord.Embed(title = f"{user.name} Your Line Broke!", description = f"{title}", color = t_color)
-                embed.add_field(name = f"Your line broke and you caught nothing.", value = f"**- 1** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+        if chance == 2: # Line Broke
+            await Database.Update_User_Stats(user_id, "fish_skill", "subtract", 1)
+            
+            embed = discord.Embed(title = f"{user.name} Your Line Broke!", description = f"{title}", color = t_color)
+            embed.add_field(name = f"Your line broke and you caught nothing.", value = f"**- 1** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
 
-                return embed
+            return embed
 
-            if chance == 3: # Caught mackeral
-                await Database.Update_User_Inventory(user_id, "item27", "add", fish_amount)
-                await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
+        if chance == 3: # Caught mackeral
+            await Database.Update_User_Inventory(user_id, "item27", "add", fish_amount)
+            await Database.Update_User_Stats(user_id, "fish_skill", "add", fish_skill_amount)
 
-                embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
-                embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415267840)} Mackeral", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
-                embed.set_thumbnail(url = "https://i.imgur.com/YCWAbtZ.png")
+            embed = discord.Embed(title = f"{user.name} Caught a Fish!", description = f"{title}", color = t_color)
+            embed.add_field(name = f"**+ {fish_amount}** {bot.get_emoji(888412218415267840)} Mackeral", value = f"**+ {fish_skill_amount}** {bot.get_emoji(888402427647254538)} Fishing Skill", inline = False)
+            embed.set_thumbnail(url = "https://i.imgur.com/YCWAbtZ.png")
 
-                return embed
+            return embed
 
     # Hunt View
     async def Setup_Hunting(bot, ctx, user_id):
@@ -1669,12 +1728,12 @@ class Views():
                     user = interaction.user
                     title, t_color = await Database.Fetch_Title(bot, user_id)
                     if user.id == user_id:
-                        drop = random.choice([1,1,2,1,1,1,2,1,1,2,1,3,2,1,1,2,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,2])
+                        drop = random.choice([1,1,2,1,4,5,2,1,1,2,1,3,2,1,5,2,7,4,1,2,1,1,1,1,1,4,1,6,1,1,4,1,2,2,2,1,1,4,1,1,2,6,7,6,5,7,7])
                         open_embed = discord.Embed(title = f"{ctx.author.name} opened a Basic Chest!", description = title, color = t_color)
 
                         if drop == 1: # Milk
                             item_key = "item9"
-                            item_amount = items["item10"]["drop_table"]["item9"]
+                            item_amount = random.randrange(3,6)
 
                             open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(988842419925708860)} Milk")
                             await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
@@ -1682,7 +1741,7 @@ class Views():
 
                         if drop == 2: # Lime
                             item_key = "item7"
-                            item_amount = items["item10"]["drop_table"]["item7"]
+                            item_amount = random.randrange(7,14)
 
                             open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(988820202361864252)} Limes")
                             await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
@@ -1690,11 +1749,45 @@ class Views():
 
                         if drop == 3: # Special Golden Bar
                             item_key = "item11"
-                            item_amount = items["item10"]["drop_table"]["item11"]
+                            item_amount = 1
 
                             open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(985978615911051314)} Special Golden Bar!")
                             await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
                             await Database.Update_User_Inventory(user_id, "item10", "subtract", 1)
+
+                        if drop == 4: # Iron Ingot
+                            item_key = "item21"
+                            item_amount = random.randrange(1,4)
+
+                            open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(998910308624125972)} Iron Ingots!")
+                            await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
+                            await Database.Update_User_Inventory(user_id, "item10", "subtract", 1)
+
+                        if drop == 5: # Iron Pickaxe
+                            item_key = "item23"
+                            item_amount = 1
+
+                            open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(998902721996398594)} Iron Pickaxe!")
+                            await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
+                            await Database.Update_User_Inventory(user_id, "item10", "subtract", 1)
+
+                        if drop == 6: # Iron Pickaxe
+                            item_key = "item10"
+                            item_amount = random.randrange(1,5)
+
+                            open_embed.add_field(name = "**You Received:**", value = f"**+ {item_amount}** {bot.get_emoji(887651039573082122)} Basic Chests!")
+                            await Database.Update_User_Inventory(user_id, item_key, "add", item_amount)
+                            await Database.Update_User_Inventory(user_id, "item10", "subtract", 1)
+
+                        if drop == 7: # Mining/Work Skill
+                            skill_amount = random.randrange(1,4)
+
+                            await Database.Update_User_Stats(user_id, "work_skill", "add", skill_amount)
+
+                            open_embed.add_field(name = "**You Received:**", value = f"**+ {skill_amount}** {bot.get_emoji(998902721996398594)} Mining Skill!")
+                            await Database.Update_User_Inventory(user_id, "item10", "subtract", 1)
+
+
 
                         await interaction.response.edit_message(embed = open_embed, view = None)
 
@@ -2223,8 +2316,8 @@ class Tools():
                 return skill_name, skill_description, skill_emoji
 
     # Creating skill slots for profile
-    async def Generate_Skill_Slots(bot, user_id):
-        skills_list = Database.Fetch_Skills()
+    async def Generate_Skill_Slots(bot, user_id, embed):
+        skills_list = await Database.Fetch_Skills()
 
         skills_db = sql.connect("./data/skills_db.db")
         cursor = skills_db.cursor()
@@ -2232,20 +2325,46 @@ class Tools():
         get_query = f"SELECT slot1,slot2,slot3,slot4,slot5 FROM users WHERE id = {user_id}"
         cursor.execute(get_query)
         result = list(cursor.fetchall()[0])
+
+
+        i = 0
+        while i < 5:
+            slot = result[i]
+
+            if slot == "none": # If nothing is equipped
+                embed.add_field(name = f"**Empty Slot**", value = f"Equip a skill to active unique effects and abilities.", inline = False)
+            
+            if slot == "quickstep": # Quickstep is equipped
+                key = "skill1"
+                skill_name = skills_list[key]["name"]
+                skill_description = skills_list[key]["description"]
+                skill_emoji = skills_list[key]["emoji"]
+                embed.add_field(name = f"{bot.get_emoji(skill_emoji)} **{skill_name}**", value = skill_description, inline = False)
+
+            i+=1
+
+    # Generating the skill shop
+    async def Generate_Skill_Shop(bot, ctx, user_id, page):
+        embed = discord.Embed(title = "Skill Shop")
+        user_skills = await Database.Fetch_User_Skills(user_id)
+        skill_list = await Database.Fetch_Skills()
+
+        if page == 1:
+            stone_emoji = bot.get_emoji(999112808593641572)
+            
+            if 1 == 1: # Quickstep
+                skill = "skill1"
+                skill_name = skill_list[skill]["name"]
+                skill_description = skill_list[skill]["description"]
+                skill_emoji = skill_list[skill]["emoji"]
+                skill_cost = str(skill_list[skill]["cost"]) + " - "
+                
+                if skill in user_skills: # Check if they have the skill unlocked
+                    stone_emoji = bot.get_emoji(999452497070542848)
+                    skill_cost = " "
+                embed.add_field(name = f"{stone_emoji} {skill_cost} {bot.get_emoji(skill_emoji)} **{skill_name}**", value = f"{skill_description}")
         
-        slot1 = result[0]
-        slot2 = result[1]
-        slot3 = result[2]
-        slot4 = result[3]
-        slot5 = result[4]
-
-        if slot1 == "none":
-            pass
-
-
-
-        skills_db.close()
-
+        return embed
 
     # Generating item use information
     async def Generate_Use_Info(key):

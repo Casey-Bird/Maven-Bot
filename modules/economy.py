@@ -1,7 +1,7 @@
 
 import discord, asyncio
 
-from utils.core import Configuration, Database, Views, Cooldowns, Tools, Skills
+from utils.core import Configuration, Database, Views, Cooldowns, Tools
 from discord import SlashCommandGroup
 from discord.commands import slash_command
 from discord.ext import commands
