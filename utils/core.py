@@ -263,8 +263,8 @@ class Database():
                 t_color = discord.Color.from_rgb(196,149,37)
 
             if title_name == "kami":
-                title = f"{bot.get_emoji(993848035253694484)} Kami of the Forest {bot.get_emoji(993848035253694484)}"
-                t_color = discord.Color.from_rgb(66,237,95)
+                title = f"{bot.get_emoji(999793524394430525)} Viridian Emperor {bot.get_emoji(999793524394430525)}"
+                t_color = discord.Color.from_rgb(100,217,154)
 
             if title_name == "void":
                 title = f"{bot.get_emoji(997271210285092974)} Avatar of the Void {bot.get_emoji(997271210285092974)}"
@@ -454,110 +454,119 @@ class Database():
 
     # Fetch an item key based on user input
     async def Fetch_Item_Key(name):
+        item = name.lower()
+
         worldlock_names = ["world", "world lock", "lock", "wl", "wls"]
-        if name in worldlock_names:
+        if item in worldlock_names:
             return "item1"
         
         eggplant_name = ["eggplant", "eggplants"]
-        if name in eggplant_name:
+        if item in eggplant_name:
             return "item2"
 
         banana_name = ["banana", "bananas", "banans", "banan"]
-        if name in banana_name:
+        if item in banana_name:
             return "item3"
         
         sword_name = ["sword", "swords", "swor"]
-        if name in sword_name:
+        if item in sword_name:
             return "item4"
 
         seabass_name = ["sea bass", "sea", "bass", "sea basses", "seabass"]
-        if name in seabass_name:
+        if item in seabass_name:
             return "item5"
 
         rawmeat_name = ["raw meat", "raw", "meat", "raw meats", "rawmeat"]
-        if name in rawmeat_name:
+        if item in rawmeat_name:
             return "item6"
 
         lime_name = ["lime", "limes"]
-        if name in lime_name:
+        if item in lime_name:
             return "item7"
 
         foxfur_name = ["foxfur", "furs", "fox", "fox fur", "fox furs", "foxes"]
-        if name in foxfur_name:
+        if item in foxfur_name:
             return "item8"
 
         milk_name = ["milk", "milks"]
-        if name in milk_name:
+        if item in milk_name:
             return "item9"
 
         basicchest_name = ["basicchest", "basic", "basic chest", "basic chests", "basics"]
-        if name in basicchest_name:
+        if item in basicchest_name:
             return "item10"
 
         specialgolden_name = ["special golden bar", "special golden", "special", "specialgoldenbar"]
-        if name in specialgolden_name:
+        if item in specialgolden_name:
             return "item11"
 
         tome_name = ["tome"]
-        if name in tome_name:
+        if item in tome_name:
             return "item12"
 
         wisp_name = ["forest wisp", "forest", "wisp"]
-        if name in wisp_name:
+        if item in wisp_name:
             return "item13"
 
         voidstone_name = ["void stone", "void ston", "void stones", "voidstone", "voidstones"]
-        if name in voidstone_name:
+        if item in voidstone_name:
             return "item14"
 
         voidstone_name = ["void knife", "void knive", "void knifes", "voidknife", "voidknifes", "voidknives"]
-        if name in voidstone_name:
+        if item in voidstone_name:
             return "item15"
 
         frostcrown_name = ["frost crown", "frost crowns", "frostcrown", "frostcrowns"]
-        if name in frostcrown_name:
+        if item in frostcrown_name:
             return "item16"
 
         frostcrown_name = ["frost staff", "frost staffs", "froststaff", "froststaffs"]
-        if name in frostcrown_name:
+        if item in frostcrown_name:
             return "item17"
 
         frostcirclet_name = ["frost circlet", "frostcirclet", "frost circlets"]
-        if name in frostcirclet_name:
+        if item in frostcirclet_name:
             return "item18"
 
         suspiciousmeal_name = ["suspicious", "suspicious meal", "suspiciousmeal"]
-        if name in suspiciousmeal_name:
+        if item in suspiciousmeal_name:
             return "item19"
 
         ironore_name = ["iron ore", "iron ores", "ironore"]
-        if name in ironore_name:
+        if item in ironore_name:
             return "item20"
 
         ironingot_name = ["iron ingot", "iron ingots", "ironingot", "ironingots"]
-        if name in ironingot_name:
+        if item in ironingot_name:
             return "item21"
 
         copperore_name = ["copper ore", "copper ores", "copperore", "copperores"]
-        if name in copperore_name:
+        if item in copperore_name:
             return "item22"
 
         copperingot_name = ["copper ingot", "copper ingots", "copperingot", "copperingots"]
-        if name in copperingot_name:
+        if item in copperingot_name:
             return "item23"
 
         ironpickaxe_name = ["iron pickaxe", "iron pick", "ironpickaxe", "ironpickaxes", "iron picks"]
-        if name in ironpickaxe_name:
+        if item in ironpickaxe_name:
             return "item24"
 
         goldpickaxe_name = ["gold pickaxe", "golden pickaxes", "gold pickaxe", "golden pickaxe", "golden pick", "gold pick"]
-        if name in goldpickaxe_name:
+        if item in goldpickaxe_name:
             return "item25"
 
         bloodcrystal_name = ["blood crystal", "bloodcrystal", "blood crystals", "bloodcrystal", "bloodcrystals"]
-        if name in bloodcrystal_name:
+        if item in bloodcrystal_name:
             return "item26"
 
+        mackeral_name = ["mackeral", "mackerals"]
+        if item in mackeral_name:
+            return "item27"
+
+        viridianwarrior_name = ["viridian warrior", "viridianwarrior", "viridian warriors", "viridianwarriors"]
+        if item in viridianwarrior_name:
+            return "item28"
 
 
         return "error"
@@ -672,6 +681,7 @@ class Database():
         # Key: Which item was used
         use_health, use_description, use_damage = await Tools.Generate_Use_Info(key)
         frozen_immunity = await Tools.Check_Stats_Immunity(target.id, "frozen")
+        items = await Database.Fetch_Itemlist()
         
         crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
         if crit_chance == 2:
@@ -698,18 +708,35 @@ class Database():
                 update_query = f"UPDATE users SET health = '{new_amount}' WHERE id = {target.id}"
                 cursor.execute(update_query)
 
-            if key == "item12": # Tome of the Forest
-                tome_embed = discord.Embed(title = f"{target.name} was healed by a Forest Tome.", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
+            if key == "item12": # Viridian Crown
+                tome_embed = discord.Embed(title = f"{target.name} was healed by the Viridian Emperor.", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
 
                 if target.id == 470650378271326208:
-                    rando = random.choice([1,1,2])
-                    if rando == 2:
+                    wisp_chance = random.choice([1,1,1,2])
+                    if wisp_chance == 2:
                         tome_embed.add_field(name = f"A Forest Wisp comes to your aid!", value = f"**+1** {bot.get_emoji(993847218660446311)} Forest Wisp")
                         await Database.Update_User_Inventory(target.id, "item13", "add", 1)
             
+                    warrior_chance = random.choice([1,1,1,1,1,2])
+                    if warrior_chance == 2:
+                        tome_embed.add_field(name = f"A Viridian Warrior comes to your aid!", value = f"**+1** {bot.get_emoji(999793526554501283)} Viridian Warrior")
+                        await Database.Update_User_Inventory(target.id, "item28", "add", 1)
+
+
+
                 stats_db.commit()
                 stats_db.close()
                 await interaction.response.edit_message(embed = tome_embed, view = None)
+
+            if key == "item19": # Suspicious Meal
+                embed = discord.Embed(title = f"{target.name} ate a strangely healthy meal...", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
+
+                stats_db.commit()
+                stats_db.close()
+                await interaction.response.edit_message(embed = embed, view = None)
+
+
+
 
         if type == "overheal":
             pass
@@ -813,6 +840,30 @@ class Database():
                     await ctx.send(f"{target.mention}, you've been frozen! {bot.get_emoji(636124362579116032)}")
 
                 await interaction.response.edit_message(embed = embed, view = None)
+
+            if key == "item28": # Viridian Warrior
+                warrior_amount = await Database.Fetch_Item_Amount(ctx.author.id, key)
+                use_damage = warrior_amount * items["item28"]["use_damage"]
+
+                embed = discord.Embed(title = f"{target.name} was ambushed by Viridian Warriors!", description = f"**- {use_damage}** ❤️")
+                await Database.Update_User_Inventory(ctx.author.id, key, "subtract", warrior_amount)
+
+                if current_health - use_damage <= 0: # They just died
+                    await Tools.Apply_Death(ctx, bot, target.id, severity)
+                    h = 100
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+                else: # Normal damage calculation
+                    h = current_health - use_damage
+                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
+                    cursor.execute(update_query)
+                
+
+                await interaction.response.edit_message(embed = embed, view = None)
+
+                stats_db.commit()
+                stats_db.close()
 
     # Give user skill stones
     async def Update_User_Skillstone(user_id):
@@ -1138,7 +1189,6 @@ class Views():
     async def Setup_Fish(bot, user):
         user_id = user.id
         stats = await Database.Fetch_Stats(user_id)
-        print(stats)
         title, t_color = await Database.Fetch_Title(bot, user_id)
         config = await Configuration.Fetch_Configuration_File()
         
@@ -1204,7 +1254,7 @@ class Views():
                         meat_amount = random.randrange(1,5)
                         hunt_amount = config["hunt_amount"]
                         meat = int(meat_amount) * int(hunt_amount)
-                        hunt_skill_amount = config["hunt_skill_amount"]
+                        hunt_skill_amount = config["hunt_skill_amount"] * 2
                         
                         await Database.Update_User_Inventory(user_id, "item6", "add", meat)
                         await Database.Update_User_Stats(user_id, "hunt_skill", "add", hunt_skill_amount)
@@ -1218,7 +1268,7 @@ class Views():
                         meat_amount = random.randrange(5,10)
                         hunt_amount = config["hunt_amount"]
                         meat = int(meat_amount) * int(hunt_amount)
-                        hunt_skill_amount = config["hunt_skill_amount"]
+                        hunt_skill_amount = config["hunt_skill_amount"] * 4
                         
                         await Database.Update_User_Inventory(user_id, "item6", "add", meat)
                         await Database.Update_User_Stats(user_id, "hunt_skill", "add", hunt_skill_amount)
@@ -1236,7 +1286,7 @@ class Views():
             async def fox_callback(self, button: discord.Button, interaction: discord.Interaction):
                 if user_id == interaction.user.id:
                     meat = random.randrange(2,6)
-                    fur = random.randrange(1,3)
+                    fur = random.randrange(2,5)
                     hunt_amount = config["hunt_amount"]
                     hunt_skill_amount = config["hunt_skill_amount"]
 
@@ -1795,11 +1845,11 @@ class Views():
                         pass
 
             
-            class TomeOfTheForest_Button(discord.ui.Button):
+            class ViridianCrown_Button(discord.ui.Button):
                 def __init__(self):
-                    emoji = bot.get_emoji(993842394044837968)
+                    emoji = bot.get_emoji(999793524394430525)
                     super().__init__(
-                        label = "Forest Tome",
+                        label = "Viridian Crown",
                         style = discord.ButtonStyle.gray,
                         emoji = emoji
                     )
@@ -1851,7 +1901,27 @@ class Views():
                     else:
                         pass
 
-            
+
+            class SuspiciousMeal_Button(discord.ui.Button):
+                def __init__(self):
+                    emoji = bot.get_emoji(998716213674905641)
+                    super().__init__(
+                        label = "Suspicious Meal",
+                        style = discord.ButtonStyle.gray,
+                        emoji = emoji
+                    )
+                async def callback(self, interaction: discord.Interaction):
+                    user = interaction.user
+                    title, t_color = await Database.Fetch_Title(bot, user_id)
+                    if user.id == user_id:
+                        key = "item19"
+                        await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
+                        await Cooldowns.add_cooldown("use_self", user_id)
+                    else:
+                        pass
+
+
+
 
             class Self_Menu(discord.ui.View):
                 # TODO Show all usable items, with multiple pages of buttons
@@ -1873,11 +1943,14 @@ class Views():
                         view.add_item(BasicChest_Button())
                         embed.add_field(name = f"{bot.get_emoji(887651039573082122)} Basic Chest {bot.get_emoji(880040222367289385)} - **{basic_amount}**", value = "Open this chest for goodies!", inline = False)
                     if "item12" in self_usable and user_id not in use_cooldown:
-                        view.add_item(TomeOfTheForest_Button())
-                        embed.add_field(name = f"{bot.get_emoji(993842394044837968)} Tome of The Forest {bot.get_emoji(880071881301053490)}", value = "Heal others or use it on yourself for a chance to create wisps!", inline = False)
+                        view.add_item(ViridianCrown_Button())
+                        embed.add_field(name = f"{bot.get_emoji(999793524394430525)} Viridian Crown {bot.get_emoji(880071881301053490)}", value = "Use the power of the forest to heal others, or summon the forest to aid you in battle!", inline = False)
                     if stats["frozen"] == "true":
                         view.add_item(Unfreeze_Button())
-
+                    if "item19" in self_usable and user_id not in use_cooldown:
+                        meal_amount = await Database.Fetch_Item_Amount(user_id, "item19")
+                        view.add_item(SuspiciousMeal_Button())
+                        embed.add_field(name = f"{bot.get_emoji(998716213674905641)} Suspicious Meal {bot.get_emoji(880040222480543774)} - **{meal_amount}**", value = "Looks...tasty...I guess?", inline = False)
 
             message = await ctx.respond(embed = embed, view = view)
         
@@ -1929,11 +2002,11 @@ class Views():
                             await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
                             await ctx.send(f"{target.mention}, you've been attacked!")
 
-                class TomeOfTheForest_Button(discord.ui.Button):
+                class ViridianCrown_Button(discord.ui.Button):
                     def __init__(self):
-                        emoji = bot.get_emoji(993842394044837968)
+                        emoji = bot.get_emoji(999793524394430525)
                         super().__init__(
-                            label = "Forest Tome",
+                            label = "Viridian Crown",
                             style = discord.ButtonStyle.gray,
                             emoji = emoji
                         )
@@ -2009,6 +2082,26 @@ class Views():
                                 await Database.Update_User_Inventory(target.id, "item18", "add", 1)
                                 await interaction.response.edit_message(embed = embed, view = None)
 
+                class ViridianWarrior_Button(discord.ui.Button):
+                    def __init__(self):
+                        emoji = bot.get_emoji(999793526554501283)
+                        super().__init__(
+                            label = "Viridian Warrior",
+                            style = discord.ButtonStyle.gray,
+                            emoji = emoji
+                        )
+                    async def callback(self, interaction: discord.Interaction):
+                        user = interaction.user
+                        title, t_color = await Database.Fetch_Title(bot, user_id)
+                        if user.id == user_id:
+                            key = "item28"
+                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await ctx.send(f"{target.mention}, you've been attacked!")
+                        else:
+                            pass
+
+
+
 
                 class Target_Menu(discord.ui.View):
                     # TODO Show items that can target the user
@@ -2025,8 +2118,8 @@ class Views():
                     if "item4" in target_usable: # Sword
                         view.add_item(Sword_Button())   
                 
-                    if "item12" in target_usable: # Tome of The Forest
-                        view.add_item(TomeOfTheForest_Button())
+                    if "item12" in target_usable: # Viridian Crown
+                        view.add_item(ViridianCrown_Button())
                 
                     if "item13" in target_usable: # Forest Wisp
                         view.add_item(ForestWisp_Button())
@@ -2039,6 +2132,9 @@ class Views():
 
                     if "item17" in target_usable: # Frost Staff
                         view.add_item(FrostStaff_Button())
+
+                    if "item28" in target_usable: # Viridian Warrior
+                        view.add_item(ViridianWarrior_Button())
 
                 message = await ctx.respond(embed = embed, view = view)
                 await Cooldowns.add_cooldown("use_target", user_id)
@@ -2077,9 +2173,9 @@ class Views():
         title, t_color = await Database.Fetch_Title(bot, ctx.author.id)
         items = await Database.Fetch_Itemlist()
 
-        menu_embed = discord.Embed(title = f"Crafting Menu")
-
-
+        menu_embed = discord.Embed(title = f"Crafting Menu", description= title, color = t_color)
+        menu_embed.set_image(url = "https://i.imgur.com/S0sVSbK.png")
+        menu_embed.set_footer(text = "Select a category to begin crafting!")
 
         i = 1
         while i < 200: # Checking and adding all the craftable items
@@ -2088,15 +2184,11 @@ class Views():
                 recipe = list(items[key]["recipe"])
                 if len(recipe) > 0:
                     craftable_items.append(key)
-            
             except:
                 pass
 
             i+=1
 
-
-        class Smelt_Menu(discord.ui.View): # For all ore-related crafting
-            pass
 
         class Smelt_Selection(discord.ui.Select):
             
@@ -2189,12 +2281,80 @@ class Views():
                             await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
                             await interaction.response.edit_message(embed = craft_embed, view = None)
 
+        class Cook_Selection(discord.ui.Select):
+            
+            def __init__(self):
+                ingredient_1_amount = items["item19"]["recipe"]["item2"]
+                ingredient_2_amount = items["item19"]["recipe"]["item3"]
+                options = [
+                    discord.SelectOption(label = "Suspicious Meal", description = f"{ingredient_1_amount}x Eggplants | {ingredient_2_amount}x Bananas", emoji = bot.get_emoji(998716213674905641))
+                ]
+
+                super().__init__(
+                    placeholder="Choose which item to craft.",
+                    options = options
+                )
+
+            async def callback(self, interaction: discord.Interaction):
+                selection = self.values[0]
+                if interaction.user.id == ctx.author.id:
+                    
+                    if selection.lower() == "suspicious meal":
+                        key = "item19"
+                        eggplant_key = "item2"
+                        banana_key = "item3"
+                        
+                        craft_amount = 1
+
+                        eggplant_amount = await Database.Fetch_Item_Amount(ctx.author.id, eggplant_key)
+                        banana_amount = await Database.Fetch_Item_Amount(ctx.author.id, banana_key)
+                        
+                        recipe = list(items[key]["recipe"])
+
+                        checks = []
+
+                        eggplant_required = items[key]["recipe"][eggplant_key] * craft_amount
+                        if eggplant_amount >= eggplant_required:
+                            checks.append("complete")
+                        else:
+                            checks.append("fail")
+                            
+                        banana_required = items[key]["recipe"][banana_key] * craft_amount
+                        if banana_amount >= banana_required:
+                            checks.append("complete")
+                        else:
+                            checks.append("fail")
+
+
+                        if "fail" in checks: # Something went wrong with the craft
+                            fail_embed = discord.Embed(title = f"{ctx.author.name} failed to craft. Make sure you have enough ingredients!", description=title, color = t_color)
+                            
+                            await interaction.response.edit_message(embed = fail_embed, view = None)
+
+                        else: # Continue craft
+                            craft_embed = discord.Embed(title = f"{ctx.author.name} Crafted Suspicious Meal", description=title, color = t_color)
+                            craft_embed.add_field(name = "Craft Amount:", value = f"**+ {craft_amount}** {bot.get_emoji(998716213674905641)} Suspicious Meals")
+                            craft_embed.set_thumbnail(url = "https://i.imgur.com/6Ife7q0.png")
+
+
+                            for k,v in items[key]["recipe"].items():
+                                lose_amount = v * craft_amount
+                                await Database.Update_User_Inventory(ctx.author.id, k, "subtract", lose_amount)
+
+
+                            await Database.Update_User_Inventory(ctx.author.id, key, "add", craft_amount)
+                            await interaction.response.edit_message(embed = craft_embed, view = None)
+
 
         class Craft_Menu(discord.ui.View): # Selection menu for choosing a crafting category
+            
+            smelt_emoji = bot.get_emoji(999808639558750248)
+            cooking_emoji = bot.get_emoji(999809845597327450)
 
             @discord.ui.button(
                 label="Smelting",
-                style=discord.ButtonStyle.blurple
+                style=discord.ButtonStyle.blurple,
+                emoji = smelt_emoji
             )
             async def smelting_button_callback(self, button: discord.Button, interaction: discord.Interaction):
                 if ctx.author.id == interaction.user.id:
@@ -2207,10 +2367,28 @@ class Views():
                     smelt_embed.set_thumbnail(url = "https://i.imgur.com/7LykRWg.png")
 
 
-                    view = Smelt_Menu()
+                    view = Craft_Menu()
                     view.add_item(Smelt_Selection())
                     await interaction.response.edit_message(embed = smelt_embed, view = view)
 
+            @discord.ui.button(
+                label="Cooking",
+                style=discord.ButtonStyle.blurple,
+                emoji = cooking_emoji
+            )
+            async def cooking_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+                if ctx.author.id == interaction.user.id:
+                    title, t_color = await Database.Fetch_Title(bot, ctx.author.id)
+                    
+                    cook_embed = discord.Embed(title = f"Cooking Menu", description = f"{title}", color = t_color)
+
+                    cook_embed.add_field(name = f"**1** {bot.get_emoji(998716213674905641)} Suspicious Meal", value = f"Did you mean to make this...?")
+                    cook_embed.set_thumbnail(url = "https://i.imgur.com/ITLn6y7.png")
+
+
+                    view = Craft_Menu()
+                    view.add_item(Cook_Selection())
+                    await interaction.response.edit_message(embed = cook_embed, view = view)
 
 
 
@@ -2292,12 +2470,11 @@ class Tools():
     # Creating stats title
     async def Create_Skill_Title(skill_name, skill_amount):
         if skill_name == "fish":
-            if int(skill_amount) >= 0:
-                skill_emoji = 888402427647254538
-                skill_name = "Small Fry"
-                skill_description = f"**Skill: ({skill_amount})**"
+            skill_emoji = 888402427647254538
+            skill_name = "Small Fry"
+            skill_description = f"**Skill: ({skill_amount})**"
                 
-                return skill_name, skill_description, skill_emoji
+            return skill_name, skill_description, skill_emoji
         
         if skill_name == "work":
             if int(skill_amount) >= 0:

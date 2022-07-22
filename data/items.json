@@ -97,7 +97,7 @@
         "name": "Raw Meat",
         "key": "item6",
         "description": "Raw meat harvested from a wild animal.",
-        "store_value": 80,
+        "store_value": 57,
         "emoji": 988567158487416910,
         "rarity": 880040222480543774,
         "shop": "normal",
@@ -135,7 +135,7 @@
         "name": "Fox Fur",
         "key": "item8",
         "description": "Fur harvested from a wild fox.",
-        "store_value": 110,
+        "store_value": 130,
         "emoji": 988836983856050266,
         "rarity": 880040222480543774,
         "shop": "normal",
@@ -208,11 +208,11 @@
     },
 
     "item12":{
-        "name": "Tome of the Forest",
+        "name": "Viridian Crown",
         "key": "item12",
-        "description": "An ancient book grown from the roots of elder trees.",
+        "description": "Worn by the eldest Viridian keeper, the one who wears this crown shall command the forest.",
         "store_value": 0,
-        "emoji": 993842394044837968,
+        "emoji": 999793524394430525,
         "rarity": 880071881301053490,
         "shop": "none",
         "can_buy": "false",
@@ -345,7 +345,7 @@
         "key": "item19",
         "description": "Did you mean to make this...?",
         "store_value": 469,
-        "emoji": 0,
+        "emoji": 998716213674905641,
         "rarity": 880040222480543774,
         "shop": "none",
         "can_buy": "false",
@@ -356,7 +356,7 @@
             "item3": 2
         },
         "use_description": "There's no way this tastes good.",
-        "use_health": 10,
+        "use_health": 5,
         "use_damage": 0,
         "self_usable": "true",
         "target_usable": "false"
@@ -522,7 +522,28 @@
         "use_damage": 0,
         "self_usable": "false",
         "target_usable": "false"
+    },
+
+    "item28":{
+        "name": "Viridian Warrior",
+        "key": "item28",
+        "description": "Loyal servant to the Viridian Emperor and fierce warrior in battle.",
+        "store_value": 0,
+        "emoji": 999793526554501283,
+        "rarity": 880040222367289385,
+        "shop": "normal",
+        "can_buy": "false",
+        "can_sell": "false",
+        "can_trade": "true",
+        "recipe": {
+        },
+        "use_description": "null",
+        "use_health": 0,
+        "use_damage": 2,
+        "self_usable": "false",
+        "target_usable": "true"
     }
+
 
 
 
