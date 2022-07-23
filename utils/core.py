@@ -4,6 +4,7 @@ import discord, json, asyncio, random
 import sqlite3 as sql
 
 
+
 work_cooldowns = [] # Cooldown container for users who crafted recently
 fish_cooldowns = [] # Cooldown container for users who crafted recently
 hunt_cooldowns = [] # Cooldowns for hunting
@@ -162,6 +163,38 @@ class Database():
         skills_db.close()
         return user_skills
 
+    # Fetch user's equipped skills
+    async def Fetch_User_Equipped_Skills(user_id):
+        config = await Configuration.Fetch_Configuration_File()
+
+        skills_db = sql.connect("./data/skills_db.db")
+        cursor = skills_db.cursor()
+
+        user_equipped_skill = []
+
+        i = 1
+        while i < config["max_items"]:
+            try:
+                skill = "skill"+ str(i)
+
+                get_query = f"SELECT {skill} FROM users WHERE id = {user_id}"
+                cursor.execute(get_query)
+                result = list(cursor.fetchall()[0])
+                skill_amount = result[0]
+
+                if skill_amount > 0:
+                    user_equipped_skill.append(skill)
+                
+                i += 1
+                
+            except sql.OperationalError:
+                break
+        
+        skills_db.close()
+        print(user_equipped_skill)
+
+        return user_equipped_skill
+
     # Fetch the entire items.json file
     async def Fetch_Itemlist():
         file = open("./data/items.json")
@@ -169,7 +202,7 @@ class Database():
 
         return data
 
-    # Fetch the entire items.json file
+    # Fetch the entire skills.json file
     async def Fetch_Skills():
         file = open("./data/skills.json")
         data = json.load(file)
@@ -452,6 +485,19 @@ class Database():
 
         return self_usable, target_usable
 
+    # Fetch Current Health
+    async def Fetch_User_Health(user_id):
+        stats_db = sql.connect("./data/stats_db.db")
+        cursor = stats_db.cursor()
+
+        get_query = f"SELECT health FROM users WHERE id = {user_id}"
+        cursor.execute(get_query)
+        result = list(cursor.fetchall()[0])
+        current_health = result[0]
+
+        stats_db.close()
+        return current_health
+
     # Fetch an item key based on user input
     async def Fetch_Item_Key(name):
         item = name.lower()
@@ -675,58 +721,29 @@ class Database():
             await Level_Up(user_id, message, level)
 
     # Update user Health
-    async def Update_User_Health(ctx, bot, target, type, severity, key, interaction):
-        # Type: normal, overheal, damage
-        # Severity: 1, 2, 3
-        # Key: Which item was used
-        use_health, use_description, use_damage = await Tools.Generate_Use_Info(key)
-        frozen_immunity = await Tools.Check_Stats_Immunity(target.id, "frozen")
-        items = await Database.Fetch_Itemlist()
-        
-        crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
-        if crit_chance == 2:
-            use_damage = int(use_damage * 1.5)
+    async def Update_User_Health(user_id, change, type):
+        # TODO Need to check for overheal or not
+        current_health = await Database.Fetch_User_Health(user_id)
+        max_health = 100
 
         stats_db = sql.connect("./data/stats_db.db")
         cursor = stats_db.cursor()
 
-        get_query = f"SELECT health FROM users WHERE id = {target.id}"
-        cursor.execute(get_query)
-        result = list(cursor.fetchall()[0])
-        current_health = result[0]
-        
-        health_check = int(current_health) + int(use_health)
+        if type == "heal":
+            if current_health + change > max_health:
+                update_query = f"UPDATE users SET health = '{max_health}' WHERE id = {user_id}"
+                cursor.execute(update_query)
+            else:
+                change = current_health + change
+                update_query = f"UPDATE users SET health = '{change}' WHERE id = {user_id}"
+                cursor.execute(update_query)
+            
+            stats_db.commit()
+            stats_db.close()
 
+
+        # ALL OF THIS NEEDS TO BE DELETED
         if type == "heal": # TODO Create embed send for healing
-            
-            if health_check > 100: # Set health to 100 and leave it be
-                health = 100
-                update_query = f"UPDATE users SET health = '{health}' WHERE id = {target.id}"
-                cursor.execute(update_query)
-            else: # Update health normally
-                new_amount = current_health + use_health
-                update_query = f"UPDATE users SET health = '{new_amount}' WHERE id = {target.id}"
-                cursor.execute(update_query)
-
-            if key == "item12": # Viridian Crown
-                tome_embed = discord.Embed(title = f"{target.name} was healed by the Viridian Emperor.", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
-
-                if target.id == 470650378271326208:
-                    wisp_chance = random.choice([1,1,1,2])
-                    if wisp_chance == 2:
-                        tome_embed.add_field(name = f"A Forest Wisp comes to your aid!", value = f"**+1** {bot.get_emoji(993847218660446311)} Forest Wisp")
-                        await Database.Update_User_Inventory(target.id, "item13", "add", 1)
-            
-                    warrior_chance = random.choice([1,1,1,1,1,2])
-                    if warrior_chance == 2:
-                        tome_embed.add_field(name = f"A Viridian Warrior comes to your aid!", value = f"**+1** {bot.get_emoji(999793526554501283)} Viridian Warrior")
-                        await Database.Update_User_Inventory(target.id, "item28", "add", 1)
-
-
-
-                stats_db.commit()
-                stats_db.close()
-                await interaction.response.edit_message(embed = tome_embed, view = None)
 
             if key == "item19": # Suspicious Meal
                 embed = discord.Embed(title = f"{target.name} ate a strangely healthy meal...", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
@@ -735,32 +752,8 @@ class Database():
                 stats_db.close()
                 await interaction.response.edit_message(embed = embed, view = None)
 
-
-
-
-        if type == "overheal":
-            pass
-        
         if type == "damage":
             
-            if key == "item4": # Sword
-                embed = discord.Embed(title = f"{target.name} was sliced by a Sword!", description = f"**- {use_damage}** ❤️")
-                crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
-                
-                if current_health - use_damage <= 0: # They just died
-                    await Tools.Apply_Death(ctx, bot, target.id, severity)
-                    h = 100
-                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
-                    cursor.execute(update_query)
-                
-                else: # Normal damage calculation
-                    h = current_health - use_damage
-                    update_query = f"UPDATE users SET health = '{h}' WHERE id = {target.id}"
-                    cursor.execute(update_query)
-                
-                stats_db.commit()
-                stats_db.close()
-                await interaction.response.edit_message(embed = embed, view = None)
 
             if key == "item13": # Forest Wisp
                 embed = discord.Embed(title = f"{target.name} was attacked by a Forest Wisp!", description = f"**- {use_damage}** ❤️")
@@ -1915,7 +1908,13 @@ class Views():
                     title, t_color = await Database.Fetch_Title(bot, user_id)
                     if user.id == user_id:
                         key = "item19"
-                        await Database.Update_User_Health(ctx, bot, target, "heal", 1, key, interaction)
+                        use_health, use_description, use_damage = await Tools.Generate_Use_Info(key)
+                        
+                        embed = discord.Embed(title = f"{target.name} ate a strangely healthy meal...", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
+                        
+                        await interaction.response.edit_message(embed = embed, view = None)
+                        
+                        await Database.Update_User_Health(user.id, use_health, "heal")
                         await Cooldowns.add_cooldown("use_self", user_id)
                     else:
                         pass
@@ -1999,7 +1998,7 @@ class Views():
 
                         if user.id == user_id:
                             key = "item4"
-                            await Database.Update_User_Health(ctx, bot, target, "damage", 1, key, interaction)
+                            await Tools.Attack(bot, ctx, user, target, key, interaction)
                             await ctx.send(f"{target.mention}, you've been attacked!")
 
                 class ViridianCrown_Button(discord.ui.Button):
@@ -2552,11 +2551,116 @@ class Tools():
         
         return use_health, use_description, use_damage
 
+    # Handle one user attacking another user (the item can also have positive effects)
+    async def Attack(bot, ctx, user, target, item_key, interaction):
+        
+        # Grabbing important skill information about each user
+        user_skills_equipped = await Database.Fetch_User_Equipped_Skills(user.id)
+        target_skills_equipped = await Database.Fetch_User_Equipped_Skills(target.id)
+
+        # Checking for immunity
+        frozen_immunity = await Tools.Check_Stats_Immunity(target.id, "frozen")
+
+        # Check for current status affecting the player. i.e. Frozen, Toxin, Etc..
+        user_status = await Database.Fetch_Stats(user.id) # This is a dictionary
+
+        # Generating important information about the item used
+        use_health, use_description, use_damage = await Tools.Generate_Use_Info(item_key)
+
+        # Pre-creating data to be used for calculation later on
+        crit_chance = random.choice([1,1,1,1,1,1,1,1,2])
+        severity = 1
+
+
+        # TODO User should be damaged for 5 hp if under toxin affect
+
+
+        # Handle skill effects BEFORE damage calculation
+        if 1 == 1:
+
+            # Quickstep
+            if "skill1" in target_skills_equipped:
+                quickstep_embed = discord.Embed(title = "Quickstep! Maven was fast enough to dodge the attack!", color = discord.Color.from_rgb(237, 121, 38))
+                quickstep_embed.set_thumbnail(url = "https://i.imgur.com/e1Hkmo4.jpg")
+                dodge_chance = random.choice([2])
+                if dodge_chance == 2:
+                    await interaction.response.edit_message(embed = quickstep_embed, view = None)
+                    return
+
+
+        # Handle damage bonuses based on skills or other factors such as crit damage.
+        if 1 == 1:
+
+            # Determine critical chance based on items or skill
+            if 1 == 1:
+                pass
+            
+
+            # Determine damage based on skills
+            if 1 == 1:
+                pass
+
+
+            # Apply critical damage
+            if crit_chance == 2:
+                use_damage = use_damage * 1.5
+
+
+        # Handle Damage Calculation based on the item
+        if 1 == 1:
+
+            # Sword
+            if item_key == "item4":
+                embed = discord.Embed(title = f"{target.name} was sliced by a Sword!", description = f"**- {use_damage}** ❤️")
+                await interaction.response.edit_message(embed = embed, view = None)
+
+            # Viridian Crown
+            if item_key == "item12":
+                tome_embed = discord.Embed(title = f"{target.name} was healed by the Viridian Emperor.", description = f"You were healed for ❤️ {use_health}", color = discord.Color.from_rgb(11,140,33))
+
+                if target.id == 470650378271326208:
+                    wisp_chance = random.choice([1,1,1,2])
+                    if wisp_chance == 2:
+                        tome_embed.add_field(name = f"A Forest Wisp comes to your aid!", value = f"**+1** {bot.get_emoji(993847218660446311)} Forest Wisp")
+                        await Database.Update_User_Inventory(target.id, "item13", "add", 1)
+            
+                    warrior_chance = random.choice([1,1,1,1,1,2])
+                    if warrior_chance == 2:
+                        tome_embed.add_field(name = f"A Viridian Warrior comes to your aid!", value = f"**+1** {bot.get_emoji(999793526554501283)} Viridian Warrior")
+                        await Database.Update_User_Inventory(target.id, "item28", "add", 1)
+
+                await interaction.response.edit_message(embed = tome_embed, view = None)
+
+            # Forest Wisp
+            if item_key == "item13":
+                embed = discord.Embed(title = f"{target.name} was attacked by a Forest Wisp!", description = f"**- {use_damage}** ❤️")
+                
+                await interaction.response.edit_message(embed = embed, view = None)
+
+
+
+
+
+
+        # Checking and setting current user health after attack
+        await Database.Update_User_Health(target.id, -use_damage)
+        await Database.Update_User_Health(target.id, use_health)
+
+        user_health = await Database.Fetch_User_Health(user.id)
+        target_health = await Database.Fetch_User_Health(target.id)
+
+        if user_health < 0: # They died
+            await Tools.Apply_Death(ctx, bot, user.id, severity)
+        
+        if target_health < 0: # They died
+            await Tools.Apply_Death(ctx, bot, target.id, severity)
+
 
     # Calculate damage and reduce currency
     async def Apply_Death(ctx, bot, user, severity):
         message = " "
         raw_user = bot.get_user(user)
+        reset_health = 100
 
         if severity == 1:
             severity_cost = random.randrange(1000, 3000)
@@ -2564,6 +2668,16 @@ class Tools():
 
             await Database.Update_Balance(user, "wallet", -severity_cost)
         
+
+        if 1 == 1: # Reset Health
+            stats_db = sql.connect("./data/stats_db.db")
+            cursor = stats_db.cursor()
+            update_query = f"UPDATE users SET health = '{reset_health}' WHERE id = {user.id}"
+            cursor.execute(update_query)
+
+            stats_db.commit()
+            stats_db.close()
+
         await ctx.send(message)
 
 
